@@ -1,0 +1,736 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Deep End · the prosperous coach, operationalized</title>
+<style>
+  :root{
+    --bg:#FBFAF7; --card:#FFFFFF; --card2:#F5F3ED; --line:#E7E3D8;
+    --ink:#141B2E; --muted:#5E6680; --faint:#9AA1B5;
+    --cyan:#0FA8C4; --cyan-soft:#E4F6FA;
+    --yellow:#FFD60A; --yellow-soft:#FFF6C9;
+    --orange:#FF6B35; --pink:#E14FD0;
+    --good:#1FA971; --good-soft:#E3F5EC;
+    --grad:linear-gradient(90deg,#FF6B35,#E14FD0,#22C4E6);
+    --shadow:0 1px 2px rgba(20,27,46,.05),0 8px 24px rgba(20,27,46,.06);
+    --r:16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0D1420; --card:#141D2C; --card2:#0F1826; --line:#243044;
+      --ink:#EDF1F7; --muted:#9BA6BC; --faint:#5E6a82;
+      --cyan:#2BD1EC; --cyan-soft:#0E2733;
+      --yellow:#FFE14D; --yellow-soft:#2E2A10;
+      --good:#3ECF95; --good-soft:#0F2C22;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1420; --card:#141D2C; --card2:#0F1826; --line:#243044;
+    --ink:#EDF1F7; --muted:#9BA6BC; --faint:#5E6a82;
+    --cyan:#2BD1EC; --cyan-soft:#0E2733;
+    --yellow:#FFE14D; --yellow-soft:#2E2A10;
+    --good:#3ECF95; --good-soft:#0F2C22;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"]{
+    --bg:#FBFAF7; --card:#FFFFFF; --card2:#F5F3ED; --line:#E7E3D8;
+    --ink:#141B2E; --muted:#5E6680; --faint:#9AA1B5;
+    --cyan:#0FA8C4; --cyan-soft:#E4F6FA;
+    --yellow:#FFD60A; --yellow-soft:#FFF6C9;
+    --good:#1FA971; --good-soft:#E3F5EC;
+    --shadow:0 1px 2px rgba(20,27,46,.05),0 8px 24px rgba(20,27,46,.06);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{
+    font-family:"Avenir Next Condensed","Futura","Arial Narrow",-apple-system,sans-serif;
+    font-weight:800; text-transform:uppercase; letter-spacing:.01em; line-height:1;
+  }
+  .mono{
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px 96px}
+
+  /* ---------- header ---------- */
+  header.hero{padding:40px 0 8px;text-align:center}
+  .logo{width:52px;height:52px;border-radius:14px;margin:0 auto 14px;display:block;box-shadow:var(--shadow)}
+  .pill-tag{
+    display:inline-flex;align-items:center;gap:8px;
+    border:1px solid var(--line);background:var(--card);
+    border-radius:999px;padding:7px 16px;color:var(--orange);
+  }
+  h1.title{font-size:clamp(52px,10vw,88px);margin:14px 0 4px;
+    background:linear-gradient(100deg,var(--cyan) 20%,#7B5CFF 85%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  .subtitle{color:var(--muted);max-width:520px;margin:0 auto;font-size:17px;text-wrap:balance}
+
+  /* header stat strip */
+  .stat-strip{
+    display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:22px 0 6px;
+  }
+  .stat-chip{
+    display:flex;align-items:center;gap:8px;background:var(--card);
+    border:1px solid var(--line);border-radius:999px;padding:8px 16px;
+    box-shadow:var(--shadow);font-weight:600;font-size:14px;
+  }
+  .stat-chip .mono{color:var(--faint);font-size:10px}
+  .lvlbar{width:110px;height:6px;border-radius:3px;background:var(--card2);overflow:hidden}
+  .lvlbar i{display:block;height:100%;background:var(--grad);border-radius:3px;transition:width .4s ease}
+
+  /* ---------- nav ---------- */
+  nav.tabs{
+    position:sticky;top:10px;z-index:40;display:flex;gap:4px;justify-content:flex-start;
+    background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:5px;margin:18px auto 28px;max-width:640px;box-shadow:var(--shadow);
+    overflow-x:auto;scrollbar-width:none;
+  }
+  nav.tabs::-webkit-scrollbar{display:none}
+  nav.tabs button{
+    flex:1;border:0;background:transparent;color:var(--muted);cursor:pointer;
+    border-radius:999px;padding:9px 14px;font:inherit;font-weight:700;font-size:14px;white-space:nowrap;
+  }
+  nav.tabs button.active{background:var(--ink);color:var(--bg)}
+  nav.tabs button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+  /* ---------- cards ---------- */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:22px;box-shadow:var(--shadow);position:relative;margin-bottom:16px;
+  }
+  .card.rule::before{
+    content:"";position:absolute;top:0;left:22px;width:56px;height:3px;border-radius:0 0 3px 3px;
+    background:var(--grad);
+  }
+  .card h2{font-size:26px;margin:6px 0 6px}
+  .card h3{font-size:17px;margin:0 0 4px}
+  .eyebrow{color:var(--orange);display:block;margin-bottom:6px}
+  .eyebrow.cyan{color:var(--cyan)}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+
+  mark{background:var(--yellow-soft);color:var(--ink);padding:1px 5px;border-radius:4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border:0;border-radius:12px;padding:12px 20px;cursor:pointer;
+    font:inherit;font-weight:800;font-size:15px;color:var(--ink);
+    background:var(--card2);transition:transform .08s ease;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  .btn-grad{background:var(--grad);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .btn-dark{background:var(--ink);color:var(--bg)}
+  .btn-ghost{background:transparent;border:1.5px dashed var(--line);color:var(--muted)}
+  .btn.small{padding:8px 14px;font-size:13px;border-radius:10px}
+  .btn[disabled]{opacity:.45;cursor:default}
+
+  /* ---------- progress ---------- */
+  .bar{height:10px;border-radius:5px;background:var(--card2);overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:5px;background:var(--grad);transition:width .5s ease}
+  .goal-row{display:flex;align-items:center;gap:12px;margin:10px 0}
+  .goal-row .lbl{flex:1;font-size:14px;font-weight:600}
+  .goal-row .bar{flex:1.2}
+  .goal-row .num{font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;width:42px;text-align:right}
+  .done-tick{color:var(--good);font-weight:800}
+
+  /* ---------- big number ---------- */
+  .bignum{font-size:clamp(56px,9vw,84px);line-height:1;
+    background:linear-gradient(100deg,var(--orange),var(--pink));
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+
+  /* ---------- people ---------- */
+  .person{margin-bottom:14px}
+  .person-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .person h3{font-size:19px}
+  .person .where{color:var(--muted);font-size:13px}
+  .stage-dots{display:flex;gap:6px;margin:12px 0 4px}
+  .stage-dots span{width:26px;height:8px;border-radius:4px;background:var(--card2);border:1px solid var(--line)}
+  .stage-dots span.on{background:var(--grad);border-color:transparent}
+  .stage-lbl{font-size:13px;color:var(--cyan);font-weight:700;margin-bottom:12px}
+  .person-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .linkish{background:none;border:none;color:var(--muted);cursor:pointer;font:inherit;font-size:13px;text-decoration:underline;padding:4px}
+  .linkish:hover{color:var(--ink)}
+  .history{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;font-size:13px;color:var(--muted)}
+  .history div{margin-bottom:6px}
+  .history b{color:var(--ink)}
+  .client-flag{background:var(--good-soft);color:var(--good);border-radius:8px;padding:2px 10px;font-weight:800;font-size:12px}
+
+  /* ---------- playbook ---------- */
+  textarea,input[type=text]{
+    width:100%;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);
+    color:var(--ink);font:inherit;font-size:15px;padding:12px 14px;resize:vertical;
+  }
+  textarea:focus,input:focus{outline:2px solid var(--cyan);outline-offset:1px;border-color:var(--cyan)}
+  textarea{min-height:88px}
+  .prompt-card .saved{color:var(--good);font-size:13px;font-weight:700;margin-left:10px}
+  .pb-num{color:var(--faint)}
+  .pb-action{background:var(--cyan-soft);border-radius:12px;padding:12px 14px;font-size:14px;margin:12px 0}
+  .pb-action b{color:var(--cyan)}
+  .pb-done{display:flex;align-items:center;gap:10px;margin-top:6px}
+
+  /* ---------- badges ---------- */
+  .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .badge{
+    border:1px solid var(--line);border-radius:14px;padding:16px 12px;text-align:center;
+    background:var(--card);
+  }
+  .badge .ico{font-size:30px;display:block;margin-bottom:6px}
+  .badge b{font-size:13px;display:block}
+  .badge small{color:var(--muted);font-size:11.5px;line-height:1.35;display:block;margin-top:3px}
+  .badge.locked{opacity:.38;filter:grayscale(1)}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:16px}
+  .stat-box{background:var(--card2);border-radius:14px;padding:14px;text-align:center}
+  .stat-box .n{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;display:block}
+  .stat-box .mono{color:var(--muted);font-size:9.5px}
+  .feed{font-size:13.5px;color:var(--muted)}
+  .feed div{padding:7px 0;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;gap:12px}
+  .feed .xp{color:var(--cyan);font-weight:800;white-space:nowrap}
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,14,25,.5);backdrop-filter:blur(3px);
+    display:none;align-items:flex-end;justify-content:center;z-index:100;padding:20px;
+  }
+  .overlay.open{display:flex}
+  @media(min-width:600px){.overlay{align-items:center}}
+  .modal{
+    background:var(--card);border-radius:20px;max-width:480px;width:100%;
+    padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  .modal h3{font-size:24px;margin:4px 0 4px}
+  .modal .field{margin:14px 0}
+  .modal label{font-size:13px;font-weight:700;display:block;margin-bottom:6px;color:var(--muted)}
+  .modal-btns{display:flex;gap:10px;margin-top:18px}
+  .modal-btns .btn{flex:1}
+
+  /* ---------- toast & confetti ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 22px;
+    font-weight:800;font-size:14px;opacity:0;transition:all .25s ease;z-index:200;
+    pointer-events:none;white-space:nowrap;box-shadow:var(--shadow);
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .confetti{position:fixed;font-size:24px;z-index:300;pointer-events:none;animation:fly 1.1s ease-out forwards}
+  @keyframes fly{
+    0%{transform:translateY(0) scale(.6);opacity:1}
+    100%{transform:translateY(-140px) scale(1.3) rotate(20deg);opacity:0}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+  }
+
+  .tabpanel{display:none}
+  .tabpanel.active{display:block}
+  footer{color:var(--faint);font-size:12px;text-align:center;margin-top:36px}
+  footer button{font-size:12px}
+  .empty{
+    border:1.5px dashed var(--line);border-radius:var(--r);padding:30px 20px;text-align:center;color:var(--muted);
+  }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <svg class="logo" viewBox="0 0 52 52" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#FF6B35"/><stop offset=".5" stop-color="#E14FD0"/><stop offset="1" stop-color="#22C4E6"/>
+      </linearGradient></defs>
+      <rect width="52" height="52" rx="14" fill="url(#lg)"/>
+      <circle cx="20" cy="19" r="7.5" fill="#FFE14D"/>
+      <circle cx="33" cy="30" r="7.5" fill="#FFE14D"/>
+      <circle cx="20" cy="34" r="4" fill="#fff" opacity=".9"/>
+      <circle cx="33" cy="16" r="4" fill="#fff" opacity=".9"/>
+    </svg>
+    <span class="pill-tag mono">🔥 the CATALYST game, love meets action</span>
+    <h1 class="title display">The Deep End</h1>
+    <p class="subtitle">u don't <i>find</i> clients. u <mark>create</mark> them, one powerful conversation at a time. this is where u play that game.</p>
+
+    <div class="stat-strip">
+      <div class="stat-chip">🔥 <span id="streakN">0</span><span class="mono">day streak</span></div>
+      <div class="stat-chip">💛 <span id="livesN">0</span><span class="mono">lives touched</span></div>
+      <div class="stat-chip"><span id="lvlName" class="display" style="font-size:15px">Seed</span>
+        <span class="lvlbar"><i id="lvlBar" style="width:0%"></i></span>
+        <span class="mono" id="xpLbl">0 xp</span></div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="active" data-tab="today">today</button>
+    <button data-tab="people">people</button>
+    <button data-tab="playbook">playbook</button>
+    <button data-tab="wins">wins</button>
+  </nav>
+
+  <!-- ============ TODAY ============ -->
+  <section id="panel-today" class="tabpanel active">
+    <div id="onboard"></div>
+
+    <div class="card rule">
+      <span class="eyebrow mono">01 · today's brave move</span>
+      <h2 class="display" id="braveTitle">one brave thing</h2>
+      <p id="braveText" style="font-size:17px;margin:4px 0 16px"></p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-grad" id="braveDone">i did it ✓ &nbsp;+20 xp</button>
+        <button class="btn btn-ghost" id="braveShuffle">give me a different one</button>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card rule">
+        <span class="eyebrow mono cyan">02 · the weekly rhythm</span>
+        <h3>connect · serve · invite</h3>
+        <p class="sub">the whole game, every week. resets monday.</p>
+        <div id="weeklyGoals"></div>
+      </div>
+
+      <div class="card rule">
+        <span class="eyebrow mono cyan">03 · quick moves</span>
+        <h3>something just happened?</h3>
+        <p class="sub">log it while the energy is real.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn btn-dark" id="addPersonBtn">＋ i met someone worth knowing</button>
+          <button class="btn" id="reflectBtn">🌙 evening reflection · +15 xp</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="text-align:center">
+      <span class="eyebrow mono" style="display:inline-block">not numbers. humans.</span>
+      <div class="bignum display" id="livesBig">0</div>
+      <p class="sub" style="margin-top:6px">real people u've served powerfully. every one of these is a life that felt seen because u showed up.</p>
+    </div>
+  </section>
+
+  <!-- ============ PEOPLE ============ -->
+  <section id="panel-people" class="tabpanel">
+    <div class="card rule">
+      <span class="eyebrow mono">ur people</span>
+      <h2 class="display">one human at a time</h2>
+      <p class="sub">the book's math is simple: deep connection → powerful service → fearless invitation. move each person forward when it's true, not before.</p>
+      <button class="btn btn-grad" id="addPersonBtn2">＋ add someone u met</button>
+    </div>
+    <div id="peopleList"></div>
+  </section>
+
+  <!-- ============ PLAYBOOK ============ -->
+  <section id="panel-playbook" class="tabpanel">
+    <div class="card rule">
+      <span class="eyebrow mono">the book, distilled</span>
+      <h2 class="display">8 principles of the prosperous coach</h2>
+      <p class="sub">steve chandler & rich litvin's core ideas, turned into moves u can make today. read one, do the action, check it off. <span id="pbCount"></span></p>
+    </div>
+    <div id="playbookList"></div>
+  </section>
+
+  <!-- ============ WINS ============ -->
+  <section id="panel-wins" class="tabpanel">
+    <div class="card rule">
+      <span class="eyebrow mono">proof of courage</span>
+      <h2 class="display">ur wins</h2>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+    <div class="card">
+      <h3>badges</h3>
+      <p class="sub">earned by bravery, not busyness.</p>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </div>
+    <div class="card">
+      <h3>recent activity</h3>
+      <div class="feed" id="feed"></div>
+    </div>
+  </section>
+
+  <footer>
+    built on <i>The Prosperous Coach</i> by Steve Chandler &amp; Rich Litvin · ur data lives only in this browser ·
+    <button class="linkish" id="exportBtn">download my data</button>
+  </footer>
+</div>
+
+<!-- modals -->
+<div class="overlay" id="ovPerson" role="dialog" aria-modal="true" aria-label="Add a person">
+  <div class="modal">
+    <span class="eyebrow mono">new connection</span>
+    <h3 class="display">who did u meet?</h3>
+    <div class="field"><label for="pName">their name</label><input type="text" id="pName" placeholder="sarah from the night shift"></div>
+    <div class="field"><label for="pWhere">where / how u connected</label><input type="text" id="pWhere" placeholder="coffee after yoga · old coworker · dm turned real"></div>
+    <div class="field"><label for="pNote">notes (optional)</label><textarea id="pNote"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" data-close>cancel</button>
+      <button class="btn btn-grad" id="savePerson">add them · +10 xp</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ovAdvance" role="dialog" aria-modal="true" aria-label="Log a step">
+  <div class="modal">
+    <span class="eyebrow mono" id="advEyebrow">next step</span>
+    <h3 class="display" id="advTitle"></h3>
+    <div class="field"><label id="advPromptLbl" for="advNote"></label><textarea id="advNote"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" data-close>not yet</button>
+      <button class="btn btn-grad" id="advSave"></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ovReflect" role="dialog" aria-modal="true" aria-label="Evening reflection">
+  <div class="modal">
+    <span class="eyebrow mono">🌙 evening reflection</span>
+    <h3 class="display">close out the day</h3>
+    <div class="field"><label for="refNote">notes about today (optional)</label>
+      <textarea id="refNote"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" data-close>skip</button>
+      <button class="btn btn-grad" id="refSave">save · +15 xp</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+const STORE='deepEndV1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------------- content ---------------- */
+const STAGES=[
+  {id:'met',     lbl:'u met them',            btn:null, xp:10},
+  {id:'convo',   lbl:'real conversation',      btn:'we had a real conversation', xp:15},
+  {id:'served',  lbl:'served powerfully',      btn:'i served them powerfully', xp:30},
+  {id:'invited', lbl:'invited deeper',         btn:'i made the invitation 🦁', xp:50},
+  {id:'discovery',lbl:'discovery session',     btn:'we had a discovery session', xp:75},
+  {id:'client',  lbl:'said YES',               btn:'they said YES 🎉', xp:150}
+];
+
+const BRAVE=[
+  "text one former colleague u genuinely care about. no agenda. pure curiosity about their life.",
+  "ask someone today: “what's the dream u've put on hold?” then just listen.",
+  "offer one person 45 minutes of real coaching this week. free. full presence. no pitch.",
+  "follow up with the last person u had a deep conversation with. they've been thinking about it too.",
+  "make the invitation u've been avoiding. today. imperfectly.",
+  "write down 3 people who lit up when u talked about ur work. reach out to one right now.",
+  "in ur next conversation, don't give a single piece of advice. ask one more question instead.",
+  "tell one person exactly what u see in them. be specific. watch what happens.",
+  "read ur mission out loud. then take one action that a coach with that mission would take.",
+  "ask a client or friend: “who do u know who's ready for a change?”",
+  "go where ur people are this week and say one brave hello.",
+  "send a voice note instead of a text. let them hear ur heart.",
+  "celebrate a small win out loud today. prosperity is contagious.",
+  "open ur calendar and schedule one connection call this week. right now, before this feeling passes."
+];
+
+const PLAYBOOK=[
+  {id:'slow', t:'slow down to speed up',
+   body:'clients aren\'t found through hustle. they\'re created through depth. one unhurried, powerful conversation outperforms a hundred rushed pitches. the fastest path to a full practice is going slower with fewer people.',
+   act:'cancel one “hustle” task today. use that hour to reach out to ONE person with genuine curiosity.'},
+  {id:'experience', t:'coaching IS the marketing',
+   body:'nobody buys coaching from a description. they buy it from an experience of who they become in front of u. stop explaining what u do. do it to them.',
+   act:'in ur next conversation, coach for 10 minutes instead of describing ur offer. let them feel it.'},
+  {id:'serve', t:'serve, don\'t please',
+   body:'pleasing is safe and forgettable. serving means telling the truth, asking the scary question, holding a bigger vision of them than they hold of themselves. people are changed by coaches who risk the relationship to serve it.',
+   act:'ask one question today that u\'re slightly afraid to ask.'},
+  {id:'twoverbs', t:'the whole game is two verbs: connect + invite',
+   body:'strip away funnels, content calendars, and clever branding. a coaching practice is built on connecting deeply with humans and inviting them to go deeper. everything else is decoration.',
+   act:'list 10 people u\'d love to serve. pick one. reach out today.'},
+  {id:'fear', t:'fear is the compass',
+   body:'the invitation that scares u most is usually the one that matters most. courage isn\'t the absence of fear. it\'s making the call with shaky hands. confidence comes AFTER action, never before.',
+   act:'write down the invitation u\'ve been avoiding. say it out loud. then send it.'},
+  {id:'fees', t:'charge what creates commitment',
+   body:'ur fee is part of the coaching. when someone invests at a level that makes them gulp, they show up differently, and transformation follows commitment. discount fees create discount results.',
+   act:'write down ur ideal fee. say it out loud until it sounds like a fact, not a confession.'},
+  {id:'prosperity', t:'prosperity is an inside job',
+   body:'scarcity chases; prosperity creates. the shift from “i hope someone hires me” to “i create clients through service” changes how u walk into every room. u are never one client away from desperate. u are one conversation away from creating.',
+   act:'write “i create clients through service” somewhere u\'ll see every morning this week.'},
+  {id:'overdeliver', t:'overdeliver in the deep end',
+   body:'ur current clients are ur marketing department. serve them so powerfully that they can\'t stop talking about it. referrals don\'t come from asking. they come from wow.',
+   act:'do something unexpected and generous for a current client today.'}
+];
+
+const LEVELS=[
+  {name:'Seed',min:0},{name:'Spark',min:100},{name:'Connector',min:250},
+  {name:'Deep Diver',min:500},{name:'Catalyst',min:850},{name:'Prosperous Coach',min:1300}
+];
+
+const BADGES=[
+  {id:'hello',   ico:'👋', t:'brave hello',      d:'added ur first person', chk:s=>s.people.length>=1},
+  {id:'talker',  ico:'💬', t:'deep talker',       d:'10 real conversations', chk:s=>cnt(s,'convo')>=10},
+  {id:'heart',   ico:'💗', t:'heart server',      d:'served someone powerfully', chk:s=>cnt(s,'served')>=1},
+  {id:'lighthouse',ico:'🕯️',t:'lighthouse',       d:'10 powerful serves', chk:s=>cnt(s,'served')>=10},
+  {id:'lion',    ico:'🦁', t:'fearless',          d:'made ur first invitation', chk:s=>cnt(s,'invited')>=1},
+  {id:'lion5',   ico:'🔥', t:'the fearless five', d:'5 invitations made', chk:s=>cnt(s,'invited')>=5},
+  {id:'yes',     ico:'🎉', t:'life changed',      d:'ur first YES', chk:s=>cnt(s,'client')>=1},
+  {id:'world',   ico:'🌍', t:'world changer',     d:'3 clients created', chk:s=>cnt(s,'client')>=3},
+  {id:'week',    ico:'⚡', t:'7-day fire',        d:'7-day streak', chk:s=>s.streak.n>=7},
+  {id:'student', ico:'📖', t:'student of the game',d:'all 8 principles practiced', chk:s=>PLAYBOOK.every(p=>s.playbook.includes(p.id))},
+  {id:'deep',    ico:'🌊', t:'the deep end',      d:'reached Catalyst level', chk:s=>s.xp>=850}
+];
+
+/* ---------------- state ---------------- */
+let state=load();
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(STORE));if(s&&typeof s.xp==='number')return s;}catch(e){}
+  return {xp:0,streak:{n:0,last:null},people:[],playbook:[],badges:[],log:[],braveDone:{}};
+}
+function save(){localStorage.setItem(STORE,JSON.stringify(state));}
+const todayKey=()=>new Date().toISOString().slice(0,10);
+function cnt(s,type){return s.log.filter(e=>e.type===type).length;}
+
+function bumpStreak(){
+  const t=todayKey();
+  if(state.streak.last===t)return;
+  const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+  state.streak.n=(state.streak.last===y)?state.streak.n+1:1;
+  state.streak.last=t;
+}
+
+function award(xp,type,text,big){
+  state.xp+=xp;
+  state.log.unshift({t:Date.now(),type,xp,text});
+  if(state.log.length>200)state.log.length=200;
+  bumpStreak();
+  const newB=BADGES.filter(b=>!state.badges.includes(b.id)&&b.chk(state));
+  newB.forEach(b=>state.badges.push(b.id));
+  save();renderAll();
+  toast('+'+xp+' xp · '+text);
+  if(big)confetti();
+  newB.forEach((b,i)=>setTimeout(()=>{toast(b.ico+' badge earned: '+b.t+'!');confetti();},1200*(i+1)));
+}
+
+/* ---------------- ui helpers ---------------- */
+let toastTimer;
+function toast(msg){
+  const el=$('#toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2400);
+}
+function confetti(){
+  const em=['💛','💙','🧡','✨','🎉','💗'];
+  for(let i=0;i<14;i++){
+    const s=document.createElement('span');s.className='confetti';s.textContent=em[i%em.length];
+    s.style.left=(20+Math.random()*60)+'vw';s.style.bottom=(20+Math.random()*30)+'vh';
+    s.style.animationDelay=(Math.random()*.3)+'s';
+    document.body.appendChild(s);setTimeout(()=>s.remove(),1600);
+  }
+}
+function openOv(id){$(id).classList.add('open');}
+function closeOv(){document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));}
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeOv));
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeOv();}));
+
+/* ---------------- tabs ---------------- */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    $('#panel-'+btn.dataset.tab).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+/* ---------------- today ---------------- */
+let braveShift=0;
+function dayIndex(){const d=new Date();return Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);}
+function renderToday(){
+  // onboarding
+  const ob=$('#onboard');
+  if(state.people.length===0&&state.xp===0){
+    ob.innerHTML=`<div class="card rule">
+      <span class="eyebrow mono">how this game works</span>
+      <h2 class="display">serve → invite → transform</h2>
+      <p style="font-size:16px">the prosperous coach has one radical idea: <mark>u create clients by serving people so powerfully they never forget it</mark>, then inviting them to go deeper. no funnels. no pitch fests. just humans, courage, and real conversations.</p>
+      <p class="sub">every brave action earns xp. streaks build the habit. but the only score that matters is the <b>lives touched</b> counter. ready? add the first person who comes to mind.</p>
+      <button class="btn btn-grad" id="obAdd">＋ add ur first person</button>
+    </div>`;
+    $('#obAdd').addEventListener('click',()=>openOv('#ovPerson'));
+  } else ob.innerHTML='';
+
+  // brave move
+  const idx=(dayIndex()+braveShift)%BRAVE.length;
+  $('#braveText').textContent=BRAVE[idx];
+  const doneToday=state.braveDone[todayKey()];
+  const bd=$('#braveDone');
+  bd.disabled=!!doneToday;
+  bd.textContent=doneToday?'done today ✓ see u tomorrow':'i did it ✓  +20 xp';
+
+  // weekly goals
+  const d=new Date();const dow=(d.getDay()+6)%7;
+  const mon=new Date(d.getFullYear(),d.getMonth(),d.getDate()-dow).getTime();
+  const wk=t=>state.log.filter(e=>e.t>=mon&&e.type===t).length;
+  const goals=[
+    {lbl:'real conversations',n:wk('convo'),goal:3},
+    {lbl:'powerful serves',n:wk('served'),goal:2},
+    {lbl:'fearless invitations',n:wk('invited'),goal:1}
+  ];
+  $('#weeklyGoals').innerHTML=goals.map(g=>`<div class="goal-row">
+    <span class="lbl">${g.lbl} ${g.n>=g.goal?'<span class="done-tick">✓</span>':''}</span>
+    <span class="bar"><i style="width:${Math.min(100,g.n/g.goal*100)}%"></i></span>
+    <span class="num">${g.n}/${g.goal}</span></div>`).join('');
+
+  // reflection button state
+  const refDone=state.log.some(e=>e.type==='reflection'&&new Date(e.t).toISOString().slice(0,10)===todayKey());
+  const rb=$('#reflectBtn');rb.disabled=refDone;
+  rb.textContent=refDone?'🌙 reflected tonight ✓':'🌙 evening reflection · +15 xp';
+}
+$('#braveShuffle').addEventListener('click',()=>{braveShift++;renderToday();});
+$('#braveDone').addEventListener('click',()=>{
+  state.braveDone[todayKey()]=true;
+  award(20,'brave','brave move done');
+});
+$('#reflectBtn').addEventListener('click',()=>{$('#refNote').value='';openOv('#ovReflect');setTimeout(()=>$('#refNote').focus(),50);});
+$('#refSave').addEventListener('click',()=>{closeOv();award(15,'reflection','evening reflection');});
+
+/* ---------------- people ---------------- */
+$('#addPersonBtn').addEventListener('click',()=>openOv('#ovPerson'));
+$('#addPersonBtn2').addEventListener('click',()=>openOv('#ovPerson'));
+$('#savePerson').addEventListener('click',()=>{
+  const name=$('#pName').value.trim();
+  if(!name){$('#pName').focus();return;}
+  state.people.unshift({
+    id:Date.now(),name,where:$('#pWhere').value.trim(),stage:0,convos:0,
+    notes:$('#pNote').value.trim()?[{t:Date.now(),lbl:'first impression',text:$('#pNote').value.trim()}]:[]
+  });
+  $('#pName').value='';$('#pWhere').value='';$('#pNote').value='';
+  closeOv();
+  award(10,'person','new connection: '+name);
+});
+
+let advCtx=null;
+function openAdvance(pid,extraConvo){
+  const p=state.people.find(x=>x.id===pid);if(!p)return;
+  const st=extraConvo?STAGES[1]:STAGES[p.stage+1];if(!st)return;
+  advCtx={pid,extraConvo,stage:st};
+  $('#advEyebrow').textContent=extraConvo?'another conversation':'step '+(p.stage+1)+' of 5';
+  $('#advTitle').textContent=(extraConvo?'another real conversation with ':'')+ (extraConvo?p.name:st.lbl+' · '+p.name);
+  $('#advPromptLbl').textContent='notes (optional)';
+  $('#advNote').value='';$('#advNote').placeholder='';
+  $('#advSave').textContent='log it · +'+st.xp+' xp';
+  openOv('#ovAdvance');setTimeout(()=>$('#advNote').focus(),50);
+}
+$('#advSave').addEventListener('click',()=>{
+  const {pid,extraConvo,stage}=advCtx||{};if(!stage)return;
+  const p=state.people.find(x=>x.id===pid);if(!p)return;
+  const note=$('#advNote').value.trim();
+  if(extraConvo){p.convos++;}
+  else{p.stage++;}
+  if(note)p.notes.unshift({t:Date.now(),lbl:stage.lbl,text:note});
+  closeOv();
+  const big=['invited','discovery','client'].includes(stage.id);
+  award(stage.xp,stage.id,stage.lbl+' · '+p.name,big);
+});
+
+function renderPeople(){
+  const el=$('#peopleList');
+  if(!state.people.length){
+    el.innerHTML=`<div class="empty">nobody here yet. add the next person u have a real conversation with. that's how every practice starts.</div>`;
+    return;
+  }
+  el.innerHTML=state.people.map(p=>{
+    const next=STAGES[p.stage+1];
+    const dots=STAGES.slice(1).map((s,i)=>`<span class="${i<p.stage?'on':''}" title="${s.lbl}"></span>`).join('');
+    const hist=p.notes.map(n=>`<div><b>${esc(n.lbl)}</b> · ${new Date(n.t).toLocaleDateString(undefined,{month:'short',day:'numeric'})} · ${esc(n.text)}</div>`).join('');
+    return `<div class="card person">
+      <div class="person-top">
+        <div><h3>${esc(p.name)} ${p.stage>=5?'<span class="client-flag">CLIENT 🎉</span>':''}</h3>
+        <span class="where">${esc(p.where||'')}</span></div>
+        <button class="linkish" data-del="${p.id}" aria-label="remove ${esc(p.name)}">remove</button>
+      </div>
+      <div class="stage-dots">${dots}</div>
+      <div class="stage-lbl">${STAGES[p.stage].lbl}${p.convos?` · ${p.convos+1} conversations`:''}</div>
+      <div class="person-actions">
+        ${next?`<button class="btn btn-dark small" data-adv="${p.id}">${next.btn} · +${next.xp} xp</button>`:'<span class="mono" style="color:var(--good)">now overdeliver 🌊</span>'}
+        ${p.stage>=1?`<button class="linkish" data-convo="${p.id}">+ log another convo</button>`:''}
+        ${p.notes.length?`<button class="linkish" data-hist="${p.id}">${'history ('+p.notes.length+')'}</button>`:''}
+      </div>
+      <div class="history" id="hist-${p.id}" hidden>${hist}</div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-adv]').forEach(b=>b.addEventListener('click',()=>openAdvance(+b.dataset.adv,false)));
+  el.querySelectorAll('[data-convo]').forEach(b=>b.addEventListener('click',()=>openAdvance(+b.dataset.convo,true)));
+  el.querySelectorAll('[data-hist]').forEach(b=>b.addEventListener('click',()=>{const h=$('#hist-'+b.dataset.hist);h.hidden=!h.hidden;}));
+  el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+    if(confirm('remove this person? (ur xp stays)')){
+      state.people=state.people.filter(p=>p.id!==+b.dataset.del);save();renderAll();
+    }
+  }));
+}
+
+/* ---------------- playbook ---------------- */
+function renderPlaybook(){
+  $('#pbCount').innerHTML=`<b>${state.playbook.length}/8 practiced.</b>`;
+  $('#playbookList').innerHTML=PLAYBOOK.map((p,i)=>{
+    const done=state.playbook.includes(p.id);
+    return `<div class="card">
+      <span class="eyebrow mono"><span class="pb-num">0${i+1} ·</span> principle</span>
+      <h3 style="font-size:20px">${p.t}</h3>
+      <p style="font-size:15px;margin:8px 0 0">${p.body}</p>
+      <div class="pb-action"><b>try this →</b> ${p.act}</div>
+      <div class="pb-done">
+        <button class="btn ${done?'':'btn-grad'} small" data-pb="${p.id}" ${done?'disabled':''}>
+          ${done?'practiced ✓':'i did the action · +20 xp'}</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('[data-pb]').forEach(b=>b.addEventListener('click',()=>{
+    if(!state.playbook.includes(b.dataset.pb)){
+      state.playbook.push(b.dataset.pb);
+      award(20,'playbook','principle practiced');
+    }
+  }));
+}
+
+/* ---------------- wins ---------------- */
+function renderWins(){
+  const stats=[
+    {n:state.people.length,l:'people met'},
+    {n:cnt(state,'convo'),l:'conversations'},
+    {n:cnt(state,'served'),l:'powerful serves'},
+    {n:cnt(state,'invited'),l:'invitations'},
+    {n:cnt(state,'discovery'),l:'discovery sessions'},
+    {n:cnt(state,'client'),l:'lives changed'}
+  ];
+  $('#statsGrid').innerHTML=stats.map(s=>`<div class="stat-box"><span class="n">${s.n}</span><span class="mono">${s.l}</span></div>`).join('');
+  $('#badgeGrid').innerHTML=BADGES.map(b=>{
+    const got=state.badges.includes(b.id);
+    return `<div class="badge ${got?'':'locked'}"><span class="ico">${b.ico}</span><b>${b.t}</b><small>${b.d}</small></div>`;
+  }).join('');
+  $('#feed').innerHTML=state.log.slice(0,14).map(e=>
+    `<div><span>${esc(e.text)}</span><span class="xp">+${e.xp} · ${new Date(e.t).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>`
+  ).join('')||'<div>nothing yet. go be brave.</div>';
+}
+
+/* ---------------- header ---------------- */
+function renderHeader(){
+  let lvl=LEVELS[0],next=null;
+  for(let i=0;i<LEVELS.length;i++){if(state.xp>=LEVELS[i].min){lvl=LEVELS[i];next=LEVELS[i+1]||null;}}
+  $('#lvlName').textContent=lvl.name;
+  $('#xpLbl').textContent=state.xp+' xp';
+  $('#lvlBar').style.width=next?Math.min(100,(state.xp-lvl.min)/(next.min-lvl.min)*100)+'%':'100%';
+  $('#streakN').textContent=state.streak.n;
+  const lives=state.people.filter(p=>p.stage>=2).length;
+  $('#livesN').textContent=lives;
+  $('#livesBig').textContent=lives;
+}
+
+/* ---------------- export ---------------- */
+$('#exportBtn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='deep-end-data.json';a.click();URL.revokeObjectURL(a.href);
+});
+
+function renderAll(){renderHeader();renderToday();renderPeople();renderPlaybook();renderWins();}
+renderAll();
+})();
+</script>

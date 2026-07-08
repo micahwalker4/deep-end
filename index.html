@@ -231,8 +231,6 @@
 
   .tabpanel{display:none}
   .tabpanel.active{display:block}
-  footer{color:var(--faint);font-size:12px;text-align:center;margin-top:36px}
-  footer button{font-size:12px}
   .empty{
     border:1.5px dashed var(--line);border-radius:var(--r);padding:30px 20px;text-align:center;color:var(--muted);
   }
@@ -252,7 +250,7 @@
     </svg>
     <span class="pill-tag mono">🔥 the CATALYST game, love meets action</span>
     <h1 class="title display">The Deep End</h1>
-    <p class="subtitle">u don't <i>find</i> clients. u <mark>create</mark> them, one powerful conversation at a time. this is where u play that game.</p>
+    <p class="subtitle">what if the business strategy was just <mark>making friends wherever u go</mark>? this is where u play that game.</p>
 
     <div class="stat-strip">
       <div class="stat-chip">🔥 <span id="streakN">0</span><span class="mono">day streak</span></div>
@@ -275,7 +273,7 @@
     <div id="onboard"></div>
 
     <div class="card rule">
-      <span class="eyebrow mono">01 · today's brave move</span>
+      <span class="eyebrow mono">01 · today's needle mover</span>
       <h2 class="display" id="braveTitle">one brave thing</h2>
       <p id="braveText" style="font-size:17px;margin:4px 0 16px"></p>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -288,7 +286,7 @@
       <div class="card rule">
         <span class="eyebrow mono cyan">02 · the weekly rhythm</span>
         <h3>connect · serve · invite</h3>
-        <p class="sub">the whole game, every week. resets monday.</p>
+        <p class="sub">the whole game, every week. plant seeds all week. resets monday.</p>
         <div id="weeklyGoals"></div>
       </div>
 
@@ -304,18 +302,18 @@
     </div>
 
     <div class="card" style="text-align:center">
-      <span class="eyebrow mono" style="display:inline-block">not numbers. humans.</span>
+      <span class="eyebrow mono" style="display:inline-block">not vanity metrics. humans.</span>
       <div class="bignum display" id="livesBig">0</div>
-      <p class="sub" style="margin-top:6px">real people u've served powerfully. every one of these is a life that felt seen because u showed up.</p>
+      <p class="sub" style="margin-top:6px">real humans u've served powerfully. not views, not followers. every one of these felt seen because u showed up as the real u.</p>
     </div>
   </section>
 
   <!-- ============ PEOPLE ============ -->
   <section id="panel-people" class="tabpanel">
     <div class="card rule">
-      <span class="eyebrow mono">ur people</span>
+      <span class="eyebrow mono">ur lead farm</span>
       <h2 class="display">one human at a time</h2>
-      <p class="sub">the book's math is simple: deep connection → powerful service → fearless invitation. move each person forward when it's true, not before.</p>
+      <p class="sub">every real conversation u're having, tracked with love. deep connection → powerful service → fearless invitation. move each person forward when it's true, not before. and never, ever cold pitch.</p>
       <button class="btn btn-grad" id="addPersonBtn2">＋ add someone u met</button>
     </div>
     <div id="peopleList"></div>
@@ -324,9 +322,9 @@
   <!-- ============ PLAYBOOK ============ -->
   <section id="panel-playbook" class="tabpanel">
     <div class="card rule">
-      <span class="eyebrow mono">the book, distilled</span>
-      <h2 class="display">8 principles of the prosperous coach</h2>
-      <p class="sub">steve chandler & rich litvin's core ideas, turned into moves u can make today. read one, do the action, check it off. <span id="pbCount"></span></p>
+      <span class="eyebrow mono">the philosophy</span>
+      <h2 class="display">8 rules of the game</h2>
+      <p class="sub">the worldview behind everything we do. read one, do the action right here right now, check it off. <span id="pbCount"></span></p>
     </div>
     <div id="playbookList"></div>
   </section>
@@ -336,6 +334,7 @@
     <div class="card rule">
       <span class="eyebrow mono">proof of courage</span>
       <h2 class="display">ur wins</h2>
+      <p class="sub">we open every call with wins. same energy here. hype urself up.</p>
       <div class="stats-grid" id="statsGrid"></div>
     </div>
     <div class="card">
@@ -349,10 +348,6 @@
     </div>
   </section>
 
-  <footer>
-    built on <i>The Prosperous Coach</i> by Steve Chandler &amp; Rich Litvin · ur data lives only in this browser ·
-    <button class="linkish" id="exportBtn">download my data</button>
-  </footer>
 </div>
 
 <!-- modals -->
@@ -409,72 +404,72 @@ const STAGES=[
   {id:'met',     lbl:'u met them',            btn:null, xp:10},
   {id:'convo',   lbl:'real conversation',      btn:'we had a real conversation', xp:15},
   {id:'served',  lbl:'served powerfully',      btn:'i served them powerfully', xp:30},
-  {id:'invited', lbl:'invited deeper',         btn:'i made the invitation 🦁', xp:50},
-  {id:'discovery',lbl:'discovery session',     btn:'we had a discovery session', xp:75},
-  {id:'client',  lbl:'said YES',               btn:'they said YES 🎉', xp:150}
+  {id:'invited', lbl:'invited into ur world',  btn:'i made the invitation · full send', xp:50},
+  {id:'discovery',lbl:'deeper 1:1 call',       btn:'we had a deeper 1:1 call', xp:75},
+  {id:'client',  lbl:'said YES 🍞',            btn:'they said YES 🍞', xp:150}
 ];
 
 const BRAVE=[
-  "text one former colleague u genuinely care about. no agenda. pure curiosity about their life.",
-  "ask someone today: “what's the dream u've put on hold?” then just listen.",
-  "offer one person 45 minutes of real coaching this week. free. full presence. no pitch.",
+  "text one person u genuinely care about. no agenda. pure curiosity. making friends IS the strategy.",
+  "send a voice note instead of a text today. ur tone builds trust in ways text never will.",
+  "give one person a real, specific compliment on their work. do ur homework first. people can feel the difference.",
+  "ask someone today: “what's the dream u've put on hold?” then shut up and listen.",
+  "offer someone a value trade call this week: 30 minutes of real support, zero pitch.",
   "follow up with the last person u had a deep conversation with. they've been thinking about it too.",
-  "make the invitation u've been avoiding. today. imperfectly.",
-  "write down 3 people who lit up when u talked about ur work. reach out to one right now.",
-  "in ur next conversation, don't give a single piece of advice. ask one more question instead.",
-  "tell one person exactly what u see in them. be specific. watch what happens.",
-  "read ur mission out loud. then take one action that a coach with that mission would take.",
-  "ask a client or friend: “who do u know who's ready for a change?”",
-  "go where ur people are this week and say one brave hello.",
-  "send a voice note instead of a text. let them hear ur heart.",
-  "celebrate a small win out loud today. prosperity is contagious.",
-  "open ur calendar and schedule one connection call this week. right now, before this feeling passes."
+  "make the invitation u've been avoiding. right here, right now. it's decided. no back doors.",
+  "ask a client or friend: “who do u know that's ready for a change?” then start the three-way chat on the spot.",
+  "go where ur people are this week. connector hat on, professional hat off. one brave hello.",
+  "before ur next dm or call, check ur energy. any desperation in there? get that in check first. u don't need anything from anyone.",
+  "end one conversation today with: “how can i support u right now?” watch what it does.",
+  "tell one person exactly what u see in them. be specific. reflect their gold back to them.",
+  "do something unexpected and generous for someone in ur world today. reciprocity is a law.",
+  "that idea u've been sitting on? shrink the gap from idea to execution. one messy action in the next 10 minutes. go."
 ];
 
 const PLAYBOOK=[
-  {id:'slow', t:'slow down to speed up',
-   body:'clients aren\'t found through hustle. they\'re created through depth. one unhurried, powerful conversation outperforms a hundred rushed pitches. the fastest path to a full practice is going slower with fewer people.',
-   act:'cancel one “hustle” task today. use that hour to reach out to ONE person with genuine curiosity.'},
-  {id:'experience', t:'coaching IS the marketing',
-   body:'nobody buys coaching from a description. they buy it from an experience of who they become in front of u. stop explaining what u do. do it to them.',
-   act:'in ur next conversation, coach for 10 minutes instead of describing ur offer. let them feel it.'},
-  {id:'serve', t:'serve, don\'t please',
-   body:'pleasing is safe and forgettable. serving means telling the truth, asking the scary question, holding a bigger vision of them than they hold of themselves. people are changed by coaches who risk the relationship to serve it.',
-   act:'ask one question today that u\'re slightly afraid to ask.'},
-  {id:'twoverbs', t:'the whole game is two verbs: connect + invite',
-   body:'strip away funnels, content calendars, and clever branding. a coaching practice is built on connecting deeply with humans and inviting them to go deeper. everything else is decoration.',
-   act:'list 10 people u\'d love to serve. pick one. reach out today.'},
-  {id:'fear', t:'fear is the compass',
-   body:'the invitation that scares u most is usually the one that matters most. courage isn\'t the absence of fear. it\'s making the call with shaky hands. confidence comes AFTER action, never before.',
-   act:'write down the invitation u\'ve been avoiding. say it out loud. then send it.'},
-  {id:'fees', t:'charge what creates commitment',
-   body:'ur fee is part of the coaching. when someone invests at a level that makes them gulp, they show up differently, and transformation follows commitment. discount fees create discount results.',
-   act:'write down ur ideal fee. say it out loud until it sounds like a fact, not a confession.'},
-  {id:'prosperity', t:'prosperity is an inside job',
-   body:'scarcity chases; prosperity creates. the shift from “i hope someone hires me” to “i create clients through service” changes how u walk into every room. u are never one client away from desperate. u are one conversation away from creating.',
-   act:'write “i create clients through service” somewhere u\'ll see every morning this week.'},
-  {id:'overdeliver', t:'overdeliver in the deep end',
-   body:'ur current clients are ur marketing department. serve them so powerfully that they can\'t stop talking about it. referrals don\'t come from asking. they come from wow.',
-   act:'do something unexpected and generous for a current client today.'}
+  {id:'friends', t:'making friends IS the business strategy',
+   body:'every good thing in ur business will trace back to one common denominator: people. real connections. community. sometimes the ROI is a client. sometimes it\'s a collab. sometimes it\'s just a new friend. there\'s literally no losing.',
+   act:'list 10 people in ur world (or who know ur people). reach out to one right here, right now. pure curiosity, zero agenda.'},
+  {id:'energy', t:'energy is the compass',
+   body:'follow what feels most alive. the things that are fun and alive to u are the things u can keep showing up for, and consistency is what leads to success. obligation energy just creates another flavor of burnout.',
+   act:'look at ur to-do list. cross off one thing u\'re doing purely from obligation. replace it with the thing that feels alive.'},
+  {id:'speed', t:'shrink the gap from idea to execution',
+   body:'the quickest way to kill an idea is overthinking and inaction. the timeline from idea to execution is up to u: it can be years, or it can be minutes. before it\'s perfect, before it\'s pretty, before it\'s polished: go. u can make it pretty later.',
+   act:'take one messy action on the idea u\'ve been sitting on. in the next 10 minutes. it\'s decided. no back doors.'},
+  {id:'serve', t:'serve, don\'t sell',
+   body:'nobody buys coaching. people buy solutions to problems, and they buy them from humans they trust. stop describing what u do. just help the person in front of u with one real thing and let them feel it.',
+   act:'in ur next conversation, coach for 10 minutes instead of explaining ur offer. then end with: “how can i support u right now?”'},
+  {id:'magnet', t:'desperation repels. magnetism is real.',
+   body:'people can smell “i need this to work” from a mile away. the most magnetic energy is: i don\'t need anything from anyone. i\'m doing this with or without u, and whoever gets to experience it, it\'s a gift.',
+   act:'before ur next dm or call, do a 60-second energy check-in. any desperation in there? regulate first. then hit send.'},
+  {id:'real', t:'be the real u, not the professional u',
+   body:'the world doesn\'t need the toned-down, businessy version of u. people buy from humans, not businesses. keep it cash. clear over clever. when u show up real, u give everyone around u permission to be real too.',
+   act:'share one thing today that\'s real and unpolished: a voice note, a one-take video, a story only u can tell.'},
+  {id:'money', t:'money is an energetic exchange',
+   body:'if u\'re not willing to receive for ur work, ask urself why u\'re pouring all this energy into something u won\'t let flow back to u. an investment that stretches someone (without stressing them) creates skin in the game, and skin in the game creates transformation. stop rejecting money.',
+   act:'say ur price out loud until it sounds like a fact, not a confession. then say it to a human.'},
+  {id:'overdeliver', t:'overdeliver and let reciprocity do the math',
+   body:'the law of reciprocity is real. pour into people. leave everyone with a really good taste in their mouth. wow ur current clients so hard they can\'t stop talking about it. referrals don\'t come from asking. they come from wow.',
+   act:'do something unexpected and generous for one client or friend in ur world today.'}
 ];
 
 const LEVELS=[
   {name:'Seed',min:0},{name:'Spark',min:100},{name:'Connector',min:250},
-  {name:'Deep Diver',min:500},{name:'Catalyst',min:850},{name:'Prosperous Coach',min:1300}
+  {name:'Needle Mover',min:500},{name:'Magnet',min:850},{name:'Catalyst',min:1300}
 ];
 
 const BADGES=[
-  {id:'hello',   ico:'👋', t:'brave hello',      d:'added ur first person', chk:s=>s.people.length>=1},
+  {id:'hello',   ico:'👋', t:'brave hello',      d:'added ur first friend', chk:s=>s.people.length>=1},
   {id:'talker',  ico:'💬', t:'deep talker',       d:'10 real conversations', chk:s=>cnt(s,'convo')>=10},
   {id:'heart',   ico:'💗', t:'heart server',      d:'served someone powerfully', chk:s=>cnt(s,'served')>=1},
-  {id:'lighthouse',ico:'🕯️',t:'lighthouse',       d:'10 powerful serves', chk:s=>cnt(s,'served')>=10},
-  {id:'lion',    ico:'🦁', t:'fearless',          d:'made ur first invitation', chk:s=>cnt(s,'invited')>=1},
-  {id:'lion5',   ico:'🔥', t:'the fearless five', d:'5 invitations made', chk:s=>cnt(s,'invited')>=5},
-  {id:'yes',     ico:'🎉', t:'life changed',      d:'ur first YES', chk:s=>cnt(s,'client')>=1},
-  {id:'world',   ico:'🌍', t:'world changer',     d:'3 clients created', chk:s=>cnt(s,'client')>=3},
+  {id:'lighthouse',ico:'🏔️',t:'the sherpa',       d:'10 powerful serves, walking alongside ur people', chk:s=>cnt(s,'served')>=10},
+  {id:'lion',    ico:'🚀', t:'full send',         d:'made ur first invitation', chk:s=>cnt(s,'invited')>=1},
+  {id:'lion5',   ico:'🔥', t:'no back doors',     d:'5 fearless invitations', chk:s=>cnt(s,'invited')>=5},
+  {id:'yes',     ico:'🍞', t:'the harvest',       d:'ur first paying client', chk:s=>cnt(s,'client')>=1},
+  {id:'world',   ico:'🌍', t:'ripple maker',      d:'3 clients. ripples for generations.', chk:s=>cnt(s,'client')>=3},
   {id:'week',    ico:'⚡', t:'7-day fire',        d:'7-day streak', chk:s=>s.streak.n>=7},
-  {id:'student', ico:'📖', t:'student of the game',d:'all 8 principles practiced', chk:s=>PLAYBOOK.every(p=>s.playbook.includes(p.id))},
-  {id:'deep',    ico:'🌊', t:'the deep end',      d:'reached Catalyst level', chk:s=>s.xp>=850}
+  {id:'student', ico:'📖', t:'student of the game',d:'all 8 rules practiced', chk:s=>PLAYBOOK.every(p=>s.playbook.includes(p.id))},
+  {id:'deep',    ico:'🔮', t:'catalyst energy',   d:'reached the CATALYST level', chk:s=>s.xp>=1300}
 ];
 
 /* ---------------- state ---------------- */
@@ -548,9 +543,9 @@ function renderToday(){
   if(state.people.length===0&&state.xp===0){
     ob.innerHTML=`<div class="card rule">
       <span class="eyebrow mono">how this game works</span>
-      <h2 class="display">serve → invite → transform</h2>
-      <p style="font-size:16px">the prosperous coach has one radical idea: <mark>u create clients by serving people so powerfully they never forget it</mark>, then inviting them to go deeper. no funnels. no pitch fests. just humans, courage, and real conversations.</p>
-      <p class="sub">every brave action earns xp. streaks build the habit. but the only score that matters is the <b>lives touched</b> counter. ready? add the first person who comes to mind.</p>
+      <h2 class="display">make friends → serve → invite</h2>
+      <p style="font-size:16px">here's the secret: creating clients gets infinitely easier when u stop focusing on creating clients and start focusing on humans. <mark>the business strategy is making friends wherever u go</mark>. serve the person in front of u so powerfully they never forget it. invite them into ur world when it's true. no funnels. no cold pitching. no desperation energy.</p>
+      <p class="sub">every brave action earns xp. streaks build the identity. but the only score that matters is the <b>lives touched</b> counter. ready? add the first person who comes to mind. right here, right now.</p>
       <button class="btn btn-grad" id="obAdd">＋ add ur first person</button>
     </div>`;
     $('#obAdd').addEventListener('click',()=>openOv('#ovPerson'));
@@ -562,7 +557,7 @@ function renderToday(){
   const doneToday=state.braveDone[todayKey()];
   const bd=$('#braveDone');
   bd.disabled=!!doneToday;
-  bd.textContent=doneToday?'done today ✓ see u tomorrow':'i did it ✓  +20 xp';
+  bd.textContent=doneToday?'done ✓ let\'s go. see u tomorrow':'i did it ✓  +20 xp';
 
   // weekly goals
   const d=new Date();const dow=(d.getDay()+6)%7;
@@ -586,7 +581,7 @@ function renderToday(){
 $('#braveShuffle').addEventListener('click',()=>{braveShift++;renderToday();});
 $('#braveDone').addEventListener('click',()=>{
   state.braveDone[todayKey()]=true;
-  award(20,'brave','brave move done');
+  award(20,'brave','needle mover done. let\'s go');
 });
 $('#reflectBtn').addEventListener('click',()=>{$('#refNote').value='';openOv('#ovReflect');setTimeout(()=>$('#refNote').focus(),50);});
 $('#refSave').addEventListener('click',()=>{closeOv();award(15,'reflection','evening reflection');});
@@ -633,7 +628,7 @@ $('#advSave').addEventListener('click',()=>{
 function renderPeople(){
   const el=$('#peopleList');
   if(!state.people.length){
-    el.innerHTML=`<div class="empty">nobody here yet. add the next person u have a real conversation with. that's how every practice starts.</div>`;
+    el.innerHTML=`<div class="empty">nobody here yet. add the next person u have a real conversation with. making friends IS the strategy, and this is where the seeds get planted.</div>`;
     return;
   }
   el.innerHTML=state.people.map(p=>{
@@ -642,14 +637,14 @@ function renderPeople(){
     const hist=p.notes.map(n=>`<div><b>${esc(n.lbl)}</b> · ${new Date(n.t).toLocaleDateString(undefined,{month:'short',day:'numeric'})} · ${esc(n.text)}</div>`).join('');
     return `<div class="card person">
       <div class="person-top">
-        <div><h3>${esc(p.name)} ${p.stage>=5?'<span class="client-flag">CLIENT 🎉</span>':''}</h3>
+        <div><h3>${esc(p.name)} ${p.stage>=5?'<span class="client-flag">THE HARVEST 🍞</span>':''}</h3>
         <span class="where">${esc(p.where||'')}</span></div>
         <button class="linkish" data-del="${p.id}" aria-label="remove ${esc(p.name)}">remove</button>
       </div>
       <div class="stage-dots">${dots}</div>
       <div class="stage-lbl">${STAGES[p.stage].lbl}${p.convos?` · ${p.convos+1} conversations`:''}</div>
       <div class="person-actions">
-        ${next?`<button class="btn btn-dark small" data-adv="${p.id}">${next.btn} · +${next.xp} xp</button>`:'<span class="mono" style="color:var(--good)">now overdeliver 🌊</span>'}
+        ${next?`<button class="btn btn-dark small" data-adv="${p.id}">${next.btn} · +${next.xp} xp</button>`:'<span class="mono" style="color:var(--good)">now overdeliver. wow makes referrals.</span>'}
         ${p.stage>=1?`<button class="linkish" data-convo="${p.id}">+ log another convo</button>`:''}
         ${p.notes.length?`<button class="linkish" data-hist="${p.id}">${'history ('+p.notes.length+')'}</button>`:''}
       </div>
@@ -672,7 +667,7 @@ function renderPlaybook(){
   $('#playbookList').innerHTML=PLAYBOOK.map((p,i)=>{
     const done=state.playbook.includes(p.id);
     return `<div class="card">
-      <span class="eyebrow mono"><span class="pb-num">0${i+1} ·</span> principle</span>
+      <span class="eyebrow mono"><span class="pb-num">0${i+1} ·</span> rule of the game</span>
       <h3 style="font-size:20px">${p.t}</h3>
       <p style="font-size:15px;margin:8px 0 0">${p.body}</p>
       <div class="pb-action"><b>try this →</b> ${p.act}</div>
@@ -685,7 +680,7 @@ function renderPlaybook(){
   document.querySelectorAll('[data-pb]').forEach(b=>b.addEventListener('click',()=>{
     if(!state.playbook.includes(b.dataset.pb)){
       state.playbook.push(b.dataset.pb);
-      award(20,'playbook','principle practiced');
+      award(20,'playbook','rule practiced. let\'s go');
     }
   }));
 }
@@ -707,7 +702,7 @@ function renderWins(){
   }).join('');
   $('#feed').innerHTML=state.log.slice(0,14).map(e=>
     `<div><span>${esc(e.text)}</span><span class="xp">+${e.xp} · ${new Date(e.t).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>`
-  ).join('')||'<div>nothing yet. go be brave.</div>';
+  ).join('')||'<div>nothing yet. go make a friend.</div>';
 }
 
 /* ---------------- header ---------------- */
@@ -722,13 +717,6 @@ function renderHeader(){
   $('#livesN').textContent=lives;
   $('#livesBig').textContent=lives;
 }
-
-/* ---------------- export ---------------- */
-$('#exportBtn').addEventListener('click',()=>{
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='deep-end-data.json';a.click();URL.revokeObjectURL(a.href);
-});
 
 function renderAll(){renderHeader();renderToday();renderPeople();renderPlaybook();renderWins();}
 renderAll();

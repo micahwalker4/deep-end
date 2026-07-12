@@ -82,7 +82,7 @@
   }
   .stat-chip .mono{color:var(--faint);font-size:10px}
   .lvlbar{width:110px;height:6px;border-radius:3px;background:var(--card2);overflow:hidden}
-  .lvlbar i{display:block;height:100%;background:var(--grad);border-radius:3px;transition:width .4s ease}
+  .lvlbar i{display:block;height:100%;width:100%;background:var(--grad);border-radius:3px;transform-origin:left;transition:transform .4s ease}
 
   /* ---------- nav ---------- */
   nav.tabs{
@@ -135,7 +135,7 @@
 
   /* ---------- progress ---------- */
   .bar{height:10px;border-radius:5px;background:var(--card2);overflow:hidden}
-  .bar i{display:block;height:100%;border-radius:5px;background:var(--grad);transition:width .5s ease}
+  .bar i{display:block;height:100%;width:100%;border-radius:5px;background:var(--grad);transform-origin:left;transition:transform .5s ease}
   .goal-row{display:flex;align-items:center;gap:12px;margin:10px 0}
   .goal-row .lbl{flex:1;font-size:14px;font-weight:600}
   .goal-row .bar{flex:1.2}
@@ -345,6 +345,10 @@
     <div class="card">
       <h3>recent activity</h3>
       <div class="feed" id="feed"></div>
+    </div>
+    <div style="text-align:center">
+      <p class="sub" style="margin-bottom:6px">ur progress lives in this browser. grab a backup anytime.</p>
+      <button class="btn small" id="exportBtn">💾 download my data</button>
     </div>
   </section>
 
@@ -570,7 +574,7 @@ function renderToday(){
   ];
   $('#weeklyGoals').innerHTML=goals.map(g=>`<div class="goal-row">
     <span class="lbl">${g.lbl} ${g.n>=g.goal?'<span class="done-tick">✓</span>':''}</span>
-    <span class="bar"><i style="width:${Math.min(100,g.n/g.goal*100)}%"></i></span>
+    <span class="bar"><i style="transform:scaleX(${Math.min(1,g.n/g.goal)})"></i></span>
     <span class="num">${g.n}/${g.goal}</span></div>`).join('');
 
   // reflection button state
@@ -711,12 +715,19 @@ function renderHeader(){
   for(let i=0;i<LEVELS.length;i++){if(state.xp>=LEVELS[i].min){lvl=LEVELS[i];next=LEVELS[i+1]||null;}}
   $('#lvlName').textContent=lvl.name;
   $('#xpLbl').textContent=state.xp+' xp';
-  $('#lvlBar').style.width=next?Math.min(100,(state.xp-lvl.min)/(next.min-lvl.min)*100)+'%':'100%';
+  $('#lvlBar').style.transform='scaleX('+(next?Math.min(1,(state.xp-lvl.min)/(next.min-lvl.min)):1)+')';
   $('#streakN').textContent=state.streak.n;
   const lives=state.people.filter(p=>p.stage>=2).length;
   $('#livesN').textContent=lives;
   $('#livesBig').textContent=lives;
 }
+
+$('#exportBtn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='deep-end-backup.json';a.click();URL.revokeObjectURL(a.href);
+  toast('backup downloaded. let\'s go');
+});
 
 function renderAll(){renderHeader();renderToday();renderPeople();renderPlaybook();renderWins();}
 renderAll();

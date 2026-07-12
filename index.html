@@ -165,11 +165,17 @@
   .client-flag{background:var(--good-soft);color:var(--good);border-radius:8px;padding:2px 10px;font-weight:800;font-size:12px}
 
   /* ---------- playbook ---------- */
-  textarea,input[type=text]{
+  textarea,input[type=text],select{
     width:100%;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);
     color:var(--ink);font:inherit;font-size:15px;padding:12px 14px;resize:vertical;
   }
-  textarea:focus,input:focus{outline:2px solid var(--cyan);outline-offset:1px;border-color:var(--cyan)}
+  select{width:auto;flex:1;min-width:160px}
+  textarea:focus,input:focus,select:focus{outline:2px solid var(--cyan);outline-offset:1px;border-color:var(--cyan)}
+  .seed-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .seed-row:last-child{border-bottom:0}
+  .seed-row .lbl{font-size:14px}
+  details summary{cursor:pointer}
+  details summary:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
   textarea{min-height:88px}
   .prompt-card .saved{color:var(--good);font-size:13px;font-weight:700;margin-left:10px}
   .pb-num{color:var(--faint)}
@@ -253,7 +259,7 @@
     <p class="subtitle">what if the business strategy was just <mark>making friends wherever u go</mark>? this is where u play that game.</p>
 
     <div class="stat-strip">
-      <div class="stat-chip">🔥 <span id="streakN">0</span><span class="mono">day streak</span></div>
+      <div class="stat-chip">🔥 <span id="streakN">0</span><span class="mono">week streak</span></div>
       <div class="stat-chip">💛 <span id="livesN">0</span><span class="mono">lives touched</span></div>
       <div class="stat-chip"><span id="lvlName" class="display" style="font-size:15px">Seed</span>
         <span class="lvlbar"><i id="lvlBar" style="width:0%"></i></span>
@@ -270,6 +276,7 @@
 
   <!-- ============ TODAY ============ -->
   <section id="panel-today" class="tabpanel active">
+    <div id="welcomeBack"></div>
     <div id="onboard"></div>
 
     <div class="card rule">
@@ -281,6 +288,9 @@
         <button class="btn btn-ghost" id="braveShuffle">give me a different one</button>
       </div>
     </div>
+
+    <div id="waterQueue"></div>
+    <div id="oneCard"></div>
 
     <div class="grid2">
       <div class="card rule">
@@ -300,6 +310,8 @@
         </div>
       </div>
     </div>
+
+    <div id="forecast"></div>
 
     <div class="card" style="text-align:center">
       <span class="eyebrow mono" style="display:inline-block">not vanity metrics. humans.</span>
@@ -336,6 +348,7 @@
       <h2 class="display">ur wins</h2>
       <p class="sub">we open every call with wins. same energy here. hype urself up.</p>
       <div class="stats-grid" id="statsGrid"></div>
+      <button class="btn small" id="shareBtn">📣 share my week with the crew</button>
     </div>
     <div class="card">
       <h3>badges</h3>
@@ -471,27 +484,35 @@ const BADGES=[
   {id:'lion5',   ico:'🔥', t:'no back doors',     d:'5 fearless invitations', chk:s=>cnt(s,'invited')>=5},
   {id:'yes',     ico:'🍞', t:'the harvest',       d:'ur first paying client', chk:s=>cnt(s,'client')>=1},
   {id:'world',   ico:'🌍', t:'ripple maker',      d:'3 clients. ripples for generations.', chk:s=>cnt(s,'client')>=3},
-  {id:'week',    ico:'⚡', t:'7-day fire',        d:'7-day streak', chk:s=>s.streak.n>=7},
+  {id:'week',    ico:'⚡', t:'4 weeks strong',    d:'a month of showing up', chk:s=>s.streak.n>=4},
+  {id:'word',    ico:'🤝', t:'word keeper',       d:'kept 3 it\'s-decided commitments', chk:s=>cnt(s,'kept')>=3},
   {id:'student', ico:'📖', t:'student of the game',d:'all 8 rules practiced', chk:s=>PLAYBOOK.every(p=>s.playbook.includes(p.id))},
   {id:'deep',    ico:'🔮', t:'catalyst energy',   d:'reached the CATALYST level', chk:s=>s.xp>=1300}
 ];
 
 /* ---------------- state ---------------- */
 let state=load();
+function weekKeyOf(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setHours(0,0,0,0);x.setDate(x.getDate()-day);return x.toISOString().slice(0,10);}
+function daysSince(t){return Math.floor((Date.now()-t)/864e5);}
 function load(){
-  try{const s=JSON.parse(localStorage.getItem(STORE));if(s&&typeof s.xp==='number')return s;}catch(e){}
-  return {xp:0,streak:{n:0,last:null},people:[],playbook:[],badges:[],log:[],braveDone:{}};
+  try{const s=JSON.parse(localStorage.getItem(STORE));if(s&&typeof s.xp==='number'){
+    if(!s.streak||s.streak.lastWeek===undefined){const old=s.streak||{};s.streak={n:old.n?1:0,lastWeek:old.last?weekKeyOf(new Date(old.last)):null};}
+    s.one=s.one||null;s.commit=s.commit||null;s.wbDismissed=s.wbDismissed||null;
+    (s.people||[]).forEach(p=>{if(!p.touched)p.touched=(p.notes&&p.notes[0]&&p.notes[0].t)||p.id;});
+    return s;
+  }}catch(e){}
+  return {xp:0,streak:{n:0,lastWeek:null},people:[],playbook:[],badges:[],log:[],braveDone:{},one:null,commit:null,wbDismissed:null};
 }
 function save(){localStorage.setItem(STORE,JSON.stringify(state));}
 const todayKey=()=>new Date().toISOString().slice(0,10);
 function cnt(s,type){return s.log.filter(e=>e.type===type).length;}
 
 function bumpStreak(){
-  const t=todayKey();
-  if(state.streak.last===t)return;
-  const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
-  state.streak.n=(state.streak.last===y)?state.streak.n+1:1;
-  state.streak.last=t;
+  const cur=weekKeyOf(new Date());
+  if(state.streak.lastWeek===cur)return;
+  const prev=weekKeyOf(new Date(Date.now()-7*864e5));
+  state.streak.n=(state.streak.lastWeek===prev)?state.streak.n+1:1;
+  state.streak.lastWeek=cur;
 }
 
 function award(xp,type,text,big){
@@ -542,18 +563,64 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 let braveShift=0;
 function dayIndex(){const d=new Date();return Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);}
 function renderToday(){
-  // onboarding
+  // welcome back (shame-free re-entry)
+  const wb=$('#welcomeBack');
+  const lastT=state.log.length?state.log[0].t:null;
+  if(lastT&&daysSince(lastT)>5&&state.wbDismissed!==todayKey()){
+    wb.innerHTML=`<div class="card rule">
+      <span class="eyebrow mono">welcome back 💛</span>
+      <h2 class="display">the seeds kept growing</h2>
+      <p style="font-size:16px">no shame in this game. u didn't fail, u paused. every seed u planted is still in the ground, and one brave hello restarts everything. right here, right now.</p>
+      <button class="btn btn-grad" id="wbGo">let's go</button>
+    </div>`;
+    $('#wbGo').addEventListener('click',()=>{state.wbDismissed=todayKey();save();renderAll();});
+  } else wb.innerHTML='';
+
+  // onboarding: the 10-name brain dump
   const ob=$('#onboard');
-  if(state.people.length===0&&state.xp===0){
+  if(state.people.length===0){
     ob.innerHTML=`<div class="card rule">
       <span class="eyebrow mono">how this game works</span>
       <h2 class="display">make friends → serve → invite</h2>
       <p style="font-size:16px">here's the secret: creating clients gets infinitely easier when u stop focusing on creating clients and start focusing on humans. <mark>the business strategy is making friends wherever u go</mark>. serve the person in front of u so powerfully they never forget it. invite them into ur world when it's true. no funnels. no cold pitching. no desperation energy.</p>
-      <p class="sub">every brave action earns xp. streaks build the identity. but the only score that matters is the <b>lives touched</b> counter. ready? add the first person who comes to mind. right here, right now.</p>
-      <button class="btn btn-grad" id="obAdd">＋ add ur first person</button>
+      <p class="sub">first move: brain dump 10 people. people u care about, people who light up around u, and the master connectors who know everyone. they don't need to be ideal clients. they need to be humans u'd love to talk to.</p>
+      <textarea id="obNames" rows="7" placeholder="one name per line:
+sarah from the night shift
+my cousin jess
+kelly (knows literally everyone)"></textarea>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center">
+        <button class="btn btn-grad" id="obPlant">plant these seeds 🌱 +10 xp each</button>
+        <button class="linkish" id="obAdd">or add one person at a time</button>
+      </div>
     </div>`;
     $('#obAdd').addEventListener('click',()=>openOv('#ovPerson'));
+    $('#obPlant').addEventListener('click',()=>{
+      const names=$('#obNames').value.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,20);
+      if(!names.length){$('#obNames').focus();return;}
+      const now=Date.now();
+      names.forEach((n,i)=>state.people.unshift({id:now+i,name:n,where:'',stage:0,convos:0,notes:[],touched:now}));
+      award(10*names.length,'person','planted '+names.length+' seeds 🌱',true);
+    });
   } else ob.innerHTML='';
+
+  // water these seeds (follow-up engine)
+  const wilt=state.people
+    .filter(p=>p.stage<5&&daysSince(p.touched||p.id)>=10)
+    .sort((a,b)=>daysSince(b.touched||b.id)-daysSince(a.touched||a.id)).slice(0,3);
+  $('#waterQueue').innerHTML=wilt.length?`<div class="card rule">
+    <span class="eyebrow mono cyan">water these seeds</span>
+    <h3>💧 quiet too long</h3>
+    <p class="sub">seeds don't grow without water. the fortune is in the follow-up, and one voice note brings them right back.</p>
+    ${wilt.map(p=>`<div class="seed-row"><span class="lbl"><b>${esc(p.name)}</b> · ${daysSince(p.touched||p.id)} days quiet</span>
+    <button class="btn btn-dark small" data-water="${p.id}">💧 i reached out</button></div>`).join('')}
+  </div>`:'';
+  document.querySelectorAll('[data-water]').forEach(b=>b.addEventListener('click',()=>{
+    const p=state.people.find(x=>x.id===+b.dataset.water);if(!p)return;
+    openAdvance(p.id,p.stage>=1);
+  }));
+
+  // ur ONE this week + the it's-decided ritual
+  renderOne();
 
   // brave move
   const idx=(dayIndex()+braveShift)%BRAVE.length;
@@ -581,6 +648,108 @@ function renderToday(){
   const refDone=state.log.some(e=>e.type==='reflection'&&new Date(e.t).toISOString().slice(0,10)===todayKey());
   const rb=$('#reflectBtn');rb.disabled=refDone;
   rb.textContent=refDone?'🌙 reflected tonight ✓':'🌙 evening reflection · +15 xp';
+
+  renderForecast();
+}
+
+function renderOne(){
+  const el=$('#oneCard');
+  const curWeek=weekKeyOf(new Date());
+  if(state.one&&(state.one.week!==curWeek||!state.people.find(p=>p.id===state.one.pid)))state.one=null;
+  const cand=state.people.filter(p=>p.stage<5);
+  if(!state.people.length||(!state.one&&!cand.length)){el.innerHTML='';return;}
+  if(!state.one){
+    el.innerHTML=`<div class="card rule">
+      <span class="eyebrow mono">ur ONE this week</span>
+      <h3>who are u moving forward?</h3>
+      <p class="sub">pick one human to focus on this week. one real step with one real person beats ten maybes.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <select id="onePick">${cand.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
+        <button class="btn btn-grad" id="oneSet">it's decided ✓ +10 xp</button>
+      </div>
+    </div>`;
+    $('#oneSet').addEventListener('click',()=>{
+      state.one={week:curWeek,pid:+$('#onePick').value};
+      const p=state.people.find(x=>x.id===state.one.pid);
+      award(10,'one','ONE chosen: '+p.name);
+    });
+    return;
+  }
+  const p=state.people.find(x=>x.id===state.one.pid);
+  const next=STAGES[p.stage+1];
+  const c=state.commit;
+  let commitHtml='';
+  if(!c||c.done){
+    commitHtml=`<label class="mono" style="color:var(--faint);display:block;margin:16px 0 6px">the it's-decided ritual</label>
+    <textarea id="commitText" rows="2" placeholder="type the exact message u're going to send ${esc(p.name)}. then lock it in."></textarea>
+    <button class="btn btn-dark small" id="commitBtn" style="margin-top:8px">it's decided. no back doors. +15 xp</button>`;
+  } else if(c.made===todayKey()){
+    commitHtml=`<p class="sub" style="margin-top:14px">📝 locked in: “${esc(c.text)}” · no back doors. i'll check on u tomorrow.</p>`;
+  } else {
+    commitHtml=`<p style="margin-top:14px;font-size:15px">u said u'd send this: <mark>${esc(c.text)}</mark> · did u?</p>
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-grad small" id="commitYes">sent it 🚀 +25 xp</button>
+      <button class="btn small" id="commitNo">not yet</button>
+    </div>`;
+  }
+  el.innerHTML=`<div class="card rule">
+    <span class="eyebrow mono">ur ONE this week</span>
+    <h3>${esc(p.name)}</h3>
+    <p class="sub">${STAGES[p.stage].lbl}${next?' · next move: '+next.lbl:' · now overdeliver'}</p>
+    ${next?`<button class="btn btn-dark small" data-oneadv="${p.id}">${next.btn} · +${next.xp} xp</button>`:''}
+    <details style="margin-top:14px">
+      <summary class="mono" style="color:var(--cyan)">need words? starters in the catalyst voice</summary>
+      <div class="sub" style="margin-top:10px">
+        <p><b>the re-opener:</b> “yo, i know it's been a minute. u crossed my mind today and i had to check in. how's life?”</p>
+        <p><b>the voice note:</b> skip the text. 30 seconds: “hey, no agenda here. i was just thinking about what u said about ___ and wanted to hear how it's going.”</p>
+        <p><b>the invitation:</b> “i've loved our conversations. i'm working with people on exactly this, and i think u'd be perfect. want to hop on a call and see what it could look like? if not, zero pressure. either way i'm in ur corner.”</p>
+      </div>
+    </details>
+    ${commitHtml}
+  </div>`;
+  const adv=el.querySelector('[data-oneadv]');
+  if(adv)adv.addEventListener('click',()=>openAdvance(p.id,false));
+  const cb=el.querySelector('#commitBtn');
+  if(cb)cb.addEventListener('click',()=>{
+    const t=el.querySelector('#commitText').value.trim();
+    if(!t){el.querySelector('#commitText').focus();return;}
+    state.commit={text:t,made:todayKey(),pid:p.id,done:false};
+    award(15,'decided','it\'s decided. no back doors.');
+  });
+  const cy=el.querySelector('#commitYes');
+  if(cy)cy.addEventListener('click',()=>{
+    state.commit.done=true;
+    award(25,'kept','kept ur word 🤝',true);
+  });
+  const cn=el.querySelector('#commitNo');
+  if(cn)cn.addEventListener('click',()=>toast('no shame. it\'s still decided. send it today.'));
+}
+
+function renderForecast(){
+  const el=$('#forecast');
+  if(cnt(state,'client')>=1){el.innerHTML='';return;}
+  let text;
+  if(!state.log.length){
+    text='play one full week and i\'ll show u the math to ur first harvest 🍞.';
+  } else {
+    const since=Date.now()-28*864e5;
+    const rec=state.log.filter(e=>e.t>=since);
+    const cw=rec.filter(e=>e.type==='convo').length/4;
+    const iw=rec.filter(e=>e.type==='invited').length/4;
+    const remaining=Math.max(1,3-cnt(state,'invited'));
+    const rate=Math.max(iw,cw/3);
+    if(rate<=0){
+      text='the math is quiet this month. one real conversation this week restarts it.';
+    } else {
+      const wks=Math.max(1,Math.ceil(remaining/rate));
+      text=`at ur current pace (~${Math.round(cw*10)/10} convos · ${Math.round(iw*10)/10} invites a week), ur first harvest 🍞 is about <b>${wks} week${wks>1?'s':''}</b> out. want it sooner? one more real conversation this week.`;
+    }
+  }
+  el.innerHTML=`<div class="card">
+    <span class="eyebrow mono cyan">the math</span>
+    <p style="font-size:15px;margin:4px 0 0">${text}</p>
+    <p class="sub" style="margin-top:8px">rough math: ~3 real conversations grow into an invitation, ~3 invitations grow into a client. the numbers are just pace, and pace is up to u.</p>
+  </div>`;
 }
 $('#braveShuffle').addEventListener('click',()=>{braveShift++;renderToday();});
 $('#braveDone').addEventListener('click',()=>{
@@ -597,7 +766,7 @@ $('#savePerson').addEventListener('click',()=>{
   const name=$('#pName').value.trim();
   if(!name){$('#pName').focus();return;}
   state.people.unshift({
-    id:Date.now(),name,where:$('#pWhere').value.trim(),stage:0,convos:0,
+    id:Date.now(),name,where:$('#pWhere').value.trim(),stage:0,convos:0,touched:Date.now(),
     notes:$('#pNote').value.trim()?[{t:Date.now(),lbl:'first impression',text:$('#pNote').value.trim()}]:[]
   });
   $('#pName').value='';$('#pWhere').value='';$('#pNote').value='';
@@ -623,6 +792,7 @@ $('#advSave').addEventListener('click',()=>{
   const note=$('#advNote').value.trim();
   if(extraConvo){p.convos++;}
   else{p.stage++;}
+  p.touched=Date.now();
   if(note)p.notes.unshift({t:Date.now(),lbl:stage.lbl,text:note});
   closeOv();
   const big=['invited','discovery','client'].includes(stage.id);
@@ -637,12 +807,14 @@ function renderPeople(){
   }
   el.innerHTML=state.people.map(p=>{
     const next=STAGES[p.stage+1];
+    const quiet=daysSince(p.touched||p.id);
+    const fresh=p.stage>=5?'':(quiet>=10?` · 🥀 ${quiet} days quiet`:' · 🌱 fresh');
     const dots=STAGES.slice(1).map((s,i)=>`<span class="${i<p.stage?'on':''}" title="${s.lbl}"></span>`).join('');
     const hist=p.notes.map(n=>`<div><b>${esc(n.lbl)}</b> · ${new Date(n.t).toLocaleDateString(undefined,{month:'short',day:'numeric'})} · ${esc(n.text)}</div>`).join('');
     return `<div class="card person">
       <div class="person-top">
         <div><h3>${esc(p.name)} ${p.stage>=5?'<span class="client-flag">THE HARVEST 🍞</span>':''}</h3>
-        <span class="where">${esc(p.where||'')}</span></div>
+        <span class="where">${esc(p.where||'')}${fresh}</span></div>
         <button class="linkish" data-del="${p.id}" aria-label="remove ${esc(p.name)}">remove</button>
       </div>
       <div class="stage-dots">${dots}</div>
@@ -727,6 +899,22 @@ $('#exportBtn').addEventListener('click',()=>{
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='deep-end-backup.json';a.click();URL.revokeObjectURL(a.href);
   toast('backup downloaded. let\'s go');
+});
+
+function fallbackCopy(t,cb){
+  const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+  ta.select();try{document.execCommand('copy');cb();}catch(e){}ta.remove();
+}
+$('#shareBtn').addEventListener('click',()=>{
+  const d=new Date();const dow=(d.getDay()+6)%7;
+  const mon=new Date(d.getFullYear(),d.getMonth(),d.getDate()-dow).getTime();
+  const wk=t=>state.log.filter(e=>e.t>=mon&&e.type===t).length;
+  const lives=state.people.filter(p=>p.stage>=2).length;
+  const text='my week in THE DEEP END 🌊\n💬 '+wk('convo')+' real conversations\n💗 '+wk('served')+' powerful serves\n🚀 '+wk('invited')+' invitations\n💛 '+lives+' lives touched\nlet\'s go.';
+  const done=()=>toast('copied. drop it in the community 🔥');
+  if(navigator.share){navigator.share({text:text}).catch(()=>{});}
+  else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));}
+  else fallbackCopy(text,done);
 });
 
 function renderAll(){renderHeader();renderToday();renderPeople();renderPlaybook();renderWins();}

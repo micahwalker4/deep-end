@@ -149,6 +149,7 @@
 
   /* ---------- people ---------- */
   .person{margin-bottom:14px}
+  .person.resting{opacity:.6}
   .person-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
   .person h3{font-size:19px}
   .person .where{color:var(--muted);font-size:13px}
@@ -317,6 +318,7 @@
     </div>
 
     <div id="forecast"></div>
+    <div id="installNudge"></div>
 
     <div class="card" style="text-align:center">
       <span class="eyebrow mono" style="display:inline-block">not vanity metrics. humans.</span>
@@ -331,12 +333,27 @@
       <span class="eyebrow mono">ur lead farm</span>
       <h2 class="display">one human at a time</h2>
       <p class="sub">every real conversation u're having, tracked with love. deep connection → powerful service → fearless invitation. move each person forward when it's true, not before. and never, ever cold pitch.</p>
-      <button class="btn btn-grad" id="addPersonBtn2">＋ add someone u met</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-grad" id="addPersonBtn2">＋ add someone u met</button>
+        <button class="btn" id="bulkBtn">🌱 brain dump a list</button>
+      </div>
+    </div>
+    <div id="peopleControls" hidden style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <input type="text" id="pplSearch" placeholder="search ur farm" aria-label="search ur farm" style="flex:2;min-width:150px">
+      <select id="pplFilter" aria-label="filter ur farm">
+        <option value="all">everyone</option>
+        <option value="water">needs water 🥀</option>
+        <option value="active">in motion</option>
+        <option value="resting">resting 🌙</option>
+        <option value="client">the harvest 🍞</option>
+      </select>
     </div>
     <div id="peopleList"></div>
     <div style="text-align:center;margin-top:8px">
       <p class="sub" style="margin-bottom:6px">ur farm lives in this browser. grab a backup anytime.</p>
       <button class="btn small" id="exportBtn">💾 download my data</button>
+      <button class="linkish" id="importBtn">restore a backup</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
     </div>
   </section>
 
@@ -382,14 +399,29 @@
 <!-- modals -->
 <div class="overlay" id="ovPerson" role="dialog" aria-modal="true" aria-label="Add a person">
   <div class="modal">
-    <span class="eyebrow mono">new connection</span>
-    <h3 class="display">who did u meet?</h3>
+    <span class="eyebrow mono" id="personModalEyebrow">new connection</span>
+    <h3 class="display" id="personModalTitle">who did u meet?</h3>
     <div class="field"><label for="pName">their name</label><input type="text" id="pName" placeholder="sarah from the night shift"></div>
     <div class="field"><label for="pWhere">where / how u connected</label><input type="text" id="pWhere" placeholder="coffee after yoga · old coworker · dm turned real"></div>
     <div class="field"><label for="pNote">notes (optional)</label><textarea id="pNote"></textarea></div>
     <div class="modal-btns">
       <button class="btn" data-close>cancel</button>
       <button class="btn btn-grad" id="savePerson">add them · +10 xp</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ovBulk" role="dialog" aria-modal="true" aria-label="Brain dump a list">
+  <div class="modal">
+    <span class="eyebrow mono">🌱 brain dump</span>
+    <h3 class="display">who's in ur world?</h3>
+    <div class="field"><label for="bulkNames">one name per line. old coworkers, friends, master connectors. nobody is too random.</label>
+    <textarea id="bulkNames" rows="8" placeholder="sarah from the night shift
+my cousin jess
+kelly (knows everyone)"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" data-close>cancel</button>
+      <button class="btn btn-grad" id="bulkSave">plant them 🌱 +10 xp each</button>
     </div>
   </div>
 </div>
@@ -538,11 +570,11 @@ function daysSince(t){return Math.floor((Date.now()-t)/864e5);}
 function load(){
   try{const s=JSON.parse(localStorage.getItem(STORE));if(s&&typeof s.xp==='number'){
     if(!s.streak||s.streak.lastWeek===undefined){const old=s.streak||{};s.streak={n:old.n?1:0,lastWeek:old.last?weekKeyOf(new Date(old.last)):null};}
-    s.one=s.one||null;s.commit=s.commit||null;s.wbDismissed=s.wbDismissed||null;s.campaigns=s.campaigns||[];
+    s.one=s.one||null;s.commit=s.commit||null;s.wbDismissed=s.wbDismissed||null;s.campaigns=s.campaigns||[];s.installDismissed=s.installDismissed||false;
     (s.people||[]).forEach(p=>{if(!p.touched)p.touched=(p.notes&&p.notes[0]&&p.notes[0].t)||p.id;});
     return s;
   }}catch(e){}
-  return {xp:0,streak:{n:0,lastWeek:null},people:[],playbook:[],badges:[],log:[],braveDone:{},one:null,commit:null,wbDismissed:null,campaigns:[]};
+  return {xp:0,streak:{n:0,lastWeek:null},people:[],playbook:[],badges:[],log:[],braveDone:{},one:null,commit:null,wbDismissed:null,campaigns:[],installDismissed:false};
 }
 function save(){localStorage.setItem(STORE,JSON.stringify(state));}
 const todayKey=()=>new Date().toISOString().slice(0,10);
@@ -556,7 +588,10 @@ function bumpStreak(){
   state.streak.lastWeek=cur;
 }
 
+function levelOf(x){let l=LEVELS[0];for(const L of LEVELS)if(x>=L.min)l=L;return l;}
+
 function award(xp,type,text,big){
+  const before=levelOf(state.xp);
   state.xp+=xp;
   state.log.unshift({t:Date.now(),type,xp,text});
   if(state.log.length>200)state.log.length=200;
@@ -566,7 +601,9 @@ function award(xp,type,text,big){
   save();renderAll();
   toast('+'+xp+' xp · '+text);
   if(big)confetti();
-  newB.forEach((b,i)=>setTimeout(()=>{toast(b.ico+' badge earned: '+b.t+'!');confetti();},1200*(i+1)));
+  const after=levelOf(state.xp);
+  if(after.name!==before.name)setTimeout(()=>{toast('⚡ LEVEL UP: u are now '+after.name+'. let\'s go');confetti();},700);
+  newB.forEach((b,i)=>setTimeout(()=>{toast(b.ico+' badge earned: '+b.t+'!');confetti();},1400*(i+1)));
 }
 
 /* ---------------- ui helpers ---------------- */
@@ -634,7 +671,7 @@ kelly (knows literally everyone)"></textarea>
         <button class="linkish" id="obAdd">or add one person at a time</button>
       </div>
     </div>`;
-    $('#obAdd').addEventListener('click',()=>openOv('#ovPerson'));
+    $('#obAdd').addEventListener('click',openPersonAdd);
     $('#obPlant').addEventListener('click',()=>{
       const names=$('#obNames').value.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,20);
       if(!names.length){$('#obNames').focus();return;}
@@ -646,19 +683,23 @@ kelly (knows literally everyone)"></textarea>
 
   // water these seeds (follow-up engine)
   const wilt=state.people
-    .filter(p=>p.stage<5&&daysSince(p.touched||p.id)>=10)
+    .filter(p=>!p.resting&&p.stage<5&&daysSince(p.touched||p.id)>=10)
     .sort((a,b)=>daysSince(b.touched||b.id)-daysSince(a.touched||a.id)).slice(0,3);
   $('#waterQueue').innerHTML=wilt.length?`<div class="card rule">
     <span class="eyebrow mono cyan">water these seeds</span>
     <h3>💧 quiet too long</h3>
-    <p class="sub">seeds don't grow without water. the fortune is in the follow-up, and one voice note brings them right back.</p>
+    <p class="sub">seeds don't grow without water. the fortune is in the follow-up, and one voice note brings them right back. (or tap 🌙 to rest someone: an empowered no is still a win.)</p>
     ${wilt.map(p=>`<div class="seed-row"><span class="lbl"><b>${esc(p.name)}</b> · ${daysSince(p.touched||p.id)} days quiet</span>
-    <button class="btn btn-dark small" data-water="${p.id}">💧 i reached out</button></div>`).join('')}
+    <span style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-dark small" data-water="${p.id}">💧 i reached out</button>
+      <button class="linkish" data-restq="${p.id}" aria-label="rest ${esc(p.name)}">🌙</button>
+    </span></div>`).join('')}
   </div>`:'';
   document.querySelectorAll('[data-water]').forEach(b=>b.addEventListener('click',()=>{
     const p=state.people.find(x=>x.id===+b.dataset.water);if(!p)return;
     openAdvance(p.id,p.stage>=1);
   }));
+  document.querySelectorAll('[data-restq]').forEach(b=>b.addEventListener('click',()=>restPerson(+b.dataset.restq)));
 
   // ur ONE this week + the it's-decided ritual
   renderOne();
@@ -691,13 +732,26 @@ kelly (knows literally everyone)"></textarea>
   rb.textContent=refDone?'🌙 reflected tonight ✓':'🌙 evening reflection · +15 xp';
 
   renderForecast();
+
+  // home-screen install nudge (protects localStorage from browser eviction)
+  const standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone;
+  const inEl=$('#installNudge');
+  if(!standalone&&!state.installDismissed){
+    inEl.innerHTML=`<div class="card">
+      <span class="eyebrow mono cyan">📲 protect ur progress</span>
+      <p style="font-size:15px;margin:4px 0 0">add this page to ur home screen. it becomes an app, ur data stays safe (browsers can clear tab data after a while), and the game is one tap away.</p>
+      <p class="sub" style="margin-top:8px">iphone: share button → add to home screen &nbsp;·&nbsp; android: browser menu → add to home screen</p>
+      <button class="btn small" id="installDone">done ✓ (or got it)</button>
+    </div>`;
+    $('#installDone').addEventListener('click',()=>{state.installDismissed=true;save();renderAll();toast('smart. ur future self says thanks 💛');});
+  } else inEl.innerHTML='';
 }
 
 function renderOne(){
   const el=$('#oneCard');
   const curWeek=weekKeyOf(new Date());
   if(state.one&&(state.one.week!==curWeek||!state.people.find(p=>p.id===state.one.pid)))state.one=null;
-  const cand=state.people.filter(p=>p.stage<5);
+  const cand=state.people.filter(p=>p.stage<5&&!p.resting);
   if(!state.people.length||(!state.one&&!cand.length)){el.innerHTML='';return;}
   if(!state.one){
     el.innerHTML=`<div class="card rule">
@@ -801,11 +855,39 @@ $('#reflectBtn').addEventListener('click',()=>{$('#refNote').value='';openOv('#o
 $('#refSave').addEventListener('click',()=>{closeOv();award(15,'reflection','evening reflection');});
 
 /* ---------------- people ---------------- */
-$('#addPersonBtn').addEventListener('click',()=>openOv('#ovPerson'));
-$('#addPersonBtn2').addEventListener('click',()=>openOv('#ovPerson'));
+let editPid=null;
+function openPersonAdd(){
+  editPid=null;
+  $('#personModalEyebrow').textContent='new connection';
+  $('#personModalTitle').textContent='who did u meet?';
+  $('#savePerson').textContent='add them · +10 xp';
+  $('#pName').value='';$('#pWhere').value='';$('#pNote').value='';
+  openOv('#ovPerson');setTimeout(()=>$('#pName').focus(),50);
+}
+function openPersonEdit(pid){
+  const p=state.people.find(x=>x.id===pid);if(!p)return;
+  editPid=pid;
+  $('#personModalEyebrow').textContent='edit';
+  $('#personModalTitle').textContent=p.name;
+  $('#savePerson').textContent='save changes';
+  $('#pName').value=p.name;$('#pWhere').value=p.where||'';$('#pNote').value='';
+  openOv('#ovPerson');
+}
+$('#addPersonBtn').addEventListener('click',openPersonAdd);
+$('#addPersonBtn2').addEventListener('click',openPersonAdd);
 $('#savePerson').addEventListener('click',()=>{
   const name=$('#pName').value.trim();
   if(!name){$('#pName').focus();return;}
+  if(editPid){
+    const p=state.people.find(x=>x.id===editPid);
+    if(p){
+      p.name=name;p.where=$('#pWhere').value.trim();
+      const note=$('#pNote').value.trim();
+      if(note)p.notes.unshift({t:Date.now(),lbl:'note',text:note});
+    }
+    editPid=null;closeOv();save();renderAll();toast('updated ✓');
+    return;
+  }
   state.people.unshift({
     id:Date.now(),name,where:$('#pWhere').value.trim(),stage:0,convos:0,touched:Date.now(),
     notes:$('#pNote').value.trim()?[{t:Date.now(),lbl:'first impression',text:$('#pNote').value.trim()}]:[]
@@ -813,6 +895,16 @@ $('#savePerson').addEventListener('click',()=>{
   $('#pName').value='';$('#pWhere').value='';$('#pNote').value='';
   closeOv();
   award(10,'person','new connection: '+name);
+});
+
+$('#bulkBtn').addEventListener('click',()=>{$('#bulkNames').value='';openOv('#ovBulk');setTimeout(()=>$('#bulkNames').focus(),50);});
+$('#bulkSave').addEventListener('click',()=>{
+  const names=$('#bulkNames').value.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,50);
+  if(!names.length){$('#bulkNames').focus();return;}
+  const now=Date.now();
+  names.forEach((n,i)=>state.people.unshift({id:now+i,name:n,where:'',stage:0,convos:0,notes:[],touched:now}));
+  closeOv();
+  award(10*names.length,'person','planted '+names.length+' seeds 🌱',true);
 });
 
 let advCtx=null;
@@ -827,49 +919,121 @@ function openAdvance(pid,extraConvo){
   $('#advSave').textContent='log it · +'+st.xp+' xp';
   openOv('#ovAdvance');setTimeout(()=>$('#advNote').focus(),50);
 }
-$('#advSave').addEventListener('click',()=>{
-  const {pid,extraConvo,stage}=advCtx||{};if(!stage)return;
+function openNote(pid){
   const p=state.people.find(x=>x.id===pid);if(!p)return;
+  advCtx={pid,noteOnly:true};
+  $('#advEyebrow').textContent='relationship memory';
+  $('#advTitle').textContent='note on '+p.name;
+  $('#advPromptLbl').textContent='what do u want to remember about them?';
+  $('#advNote').value='';$('#advNote').placeholder='her daughter\'s name is ava. big interview tuesday.';
+  $('#advSave').textContent='save note · +5 xp';
+  openOv('#ovAdvance');setTimeout(()=>$('#advNote').focus(),50);
+}
+$('#advSave').addEventListener('click',()=>{
+  const ctx=advCtx||{};
+  const p=state.people.find(x=>x.id===ctx.pid);if(!p)return;
   const note=$('#advNote').value.trim();
-  if(extraConvo){p.convos++;}
+  if(ctx.noteOnly){
+    if(!note){$('#advNote').focus();return;}
+    p.notes.unshift({t:Date.now(),lbl:'note',text:note});
+    closeOv();
+    award(5,'note','note saved · '+p.name);
+    return;
+  }
+  if(!ctx.stage)return;
+  if(ctx.extraConvo){p.convos++;}
   else{p.stage++;}
   p.touched=Date.now();
-  if(note)p.notes.unshift({t:Date.now(),lbl:stage.lbl,text:note});
+  if(note)p.notes.unshift({t:Date.now(),lbl:ctx.stage.lbl,text:note});
   closeOv();
-  const big=['invited','discovery','client'].includes(stage.id);
-  award(stage.xp,stage.id,stage.lbl+' · '+p.name,big);
+  const big=['invited','discovery','client'].includes(ctx.stage.id);
+  award(ctx.stage.xp,ctx.stage.id,ctx.stage.lbl+' · '+p.name,big);
 });
+
+function undoStep(pid){
+  const p=state.people.find(x=>x.id===pid);if(!p||p.stage===0)return;
+  const st=STAGES[p.stage];
+  const idx=state.log.findIndex(e=>e.type===st.id&&e.text&&e.text.indexOf('· '+p.name)>=0);
+  if(idx>=0){state.xp=Math.max(0,state.xp-state.log[idx].xp);state.log.splice(idx,1);}
+  else{state.xp=Math.max(0,state.xp-st.xp);}
+  p.stage--;
+  save();renderAll();
+  toast('↩ undone: '+st.lbl+'. no stress.');
+}
+function restPerson(pid){
+  const p=state.people.find(x=>x.id===pid);if(!p)return;
+  p.resting=true;
+  if(state.one&&state.one.pid===pid)state.one=null;
+  save();renderAll();
+  toast('🌙 rested. an empowered no is still a win.');
+}
+function wakePerson(pid){
+  const p=state.people.find(x=>x.id===pid);if(!p)return;
+  p.resting=false;p.touched=Date.now();
+  save();renderAll();
+  toast('☀️ '+p.name+' is back in the farm. welcome back.');
+}
 
 function renderPeople(){
   const el=$('#peopleList');
+  $('#peopleControls').hidden=state.people.length<8;
   if(!state.people.length){
     el.innerHTML=`<div class="empty">nobody here yet. add the next person u have a real conversation with. making friends IS the strategy, and this is where the seeds get planted.</div>`;
     return;
   }
-  el.innerHTML=state.people.map(p=>{
+  const q=($('#pplSearch').value||'').toLowerCase().trim();
+  const f=$('#pplFilter').value;
+  let list=state.people.filter(p=>{
+    if(q&&(p.name+' '+(p.where||'')).toLowerCase().indexOf(q)<0)return false;
+    const days=daysSince(p.touched||p.id);
+    if(f==='water')return !p.resting&&p.stage<5&&days>=10;
+    if(f==='active')return !p.resting&&p.stage<5;
+    if(f==='resting')return !!p.resting;
+    if(f==='client')return p.stage>=5;
+    return true;
+  });
+  list=[...list.filter(p=>!p.resting),...list.filter(p=>p.resting)];
+  if(!list.length){
+    el.innerHTML=`<div class="empty">no one matches. clear the search or switch the filter.</div>`;
+    return;
+  }
+  el.innerHTML=list.map(p=>{
     const next=STAGES[p.stage+1];
     const quiet=daysSince(p.touched||p.id);
-    const fresh=p.stage>=5?'':(quiet>=10?` · 🥀 ${quiet} days quiet`:' · 🌱 fresh');
+    const fresh=p.resting?' · 🌙 resting':(p.stage>=5?'':(quiet>=10?` · 🥀 ${quiet} days quiet`:' · 🌱 fresh'));
     const dots=STAGES.slice(1).map((s,i)=>`<span class="${i<p.stage?'on':''}" title="${s.lbl}"></span>`).join('');
     const hist=p.notes.map(n=>`<div><b>${esc(n.lbl)}</b> · ${new Date(n.t).toLocaleDateString(undefined,{month:'short',day:'numeric'})} · ${esc(n.text)}</div>`).join('');
-    return `<div class="card person">
+    const links=p.resting
+      ?`<button class="btn small" data-wake="${p.id}">☀️ wake them up</button>
+        <button class="linkish" data-edit="${p.id}">edit</button>
+        ${p.notes.length?`<button class="linkish" data-hist="${p.id}">history (${p.notes.length})</button>`:''}
+        <button class="linkish" data-del="${p.id}" aria-label="remove ${esc(p.name)}">remove</button>`
+      :`${next?`<button class="btn btn-dark small" data-adv="${p.id}">${next.btn} · +${next.xp} xp</button>`:'<span class="mono" style="color:var(--good)">now overdeliver. wow makes referrals.</span>'}
+        ${p.stage>=1?`<button class="linkish" data-convo="${p.id}">+ convo</button>`:''}
+        <button class="linkish" data-note="${p.id}">✍️ note</button>
+        <button class="linkish" data-edit="${p.id}">edit</button>
+        ${p.stage>0?`<button class="linkish" data-undo="${p.id}">↩ undo</button>`:''}
+        ${p.stage<5?`<button class="linkish" data-rest="${p.id}">🌙 not now</button>`:''}
+        ${p.notes.length?`<button class="linkish" data-hist="${p.id}">history (${p.notes.length})</button>`:''}`;
+    return `<div class="card person${p.resting?' resting':''}">
       <div class="person-top">
         <div><h3>${esc(p.name)} ${p.stage>=5?'<span class="client-flag">THE HARVEST 🍞</span>':''}</h3>
         <span class="where">${esc(p.where||'')}${fresh}</span></div>
-        <button class="linkish" data-del="${p.id}" aria-label="remove ${esc(p.name)}">remove</button>
+        ${p.resting?'':`<button class="linkish" data-del="${p.id}" aria-label="remove ${esc(p.name)}">remove</button>`}
       </div>
       <div class="stage-dots">${dots}</div>
       <div class="stage-lbl">${STAGES[p.stage].lbl}${p.convos?` · ${p.convos+1} conversations`:''}</div>
-      <div class="person-actions">
-        ${next?`<button class="btn btn-dark small" data-adv="${p.id}">${next.btn} · +${next.xp} xp</button>`:'<span class="mono" style="color:var(--good)">now overdeliver. wow makes referrals.</span>'}
-        ${p.stage>=1?`<button class="linkish" data-convo="${p.id}">+ log another convo</button>`:''}
-        ${p.notes.length?`<button class="linkish" data-hist="${p.id}">${'history ('+p.notes.length+')'}</button>`:''}
-      </div>
+      <div class="person-actions">${links}</div>
       <div class="history" id="hist-${p.id}" hidden>${hist}</div>
     </div>`;
   }).join('');
   el.querySelectorAll('[data-adv]').forEach(b=>b.addEventListener('click',()=>openAdvance(+b.dataset.adv,false)));
   el.querySelectorAll('[data-convo]').forEach(b=>b.addEventListener('click',()=>openAdvance(+b.dataset.convo,true)));
+  el.querySelectorAll('[data-note]').forEach(b=>b.addEventListener('click',()=>openNote(+b.dataset.note)));
+  el.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openPersonEdit(+b.dataset.edit)));
+  el.querySelectorAll('[data-undo]').forEach(b=>b.addEventListener('click',()=>undoStep(+b.dataset.undo)));
+  el.querySelectorAll('[data-rest]').forEach(b=>b.addEventListener('click',()=>restPerson(+b.dataset.rest)));
+  el.querySelectorAll('[data-wake]').forEach(b=>b.addEventListener('click',()=>wakePerson(+b.dataset.wake)));
   el.querySelectorAll('[data-hist]').forEach(b=>b.addEventListener('click',()=>{const h=$('#hist-'+b.dataset.hist);h.hidden=!h.hidden;}));
   el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
     if(confirm('remove this person? (ur xp stays)')){
@@ -963,6 +1127,26 @@ $('#exportBtn').addEventListener('click',()=>{
   a.download='deep-end-backup.json';a.click();URL.revokeObjectURL(a.href);
   toast('backup downloaded. let\'s go');
 });
+
+$('#importBtn').addEventListener('click',()=>$('#importFile').click());
+$('#importFile').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const s=JSON.parse(r.result);
+      if(!s||typeof s.xp!=='number'||!Array.isArray(s.people))throw new Error('bad');
+      if(!confirm('restore this backup? '+s.people.length+' people · '+s.xp+' xp. it replaces what\'s here right now.'))return;
+      localStorage.setItem(STORE,JSON.stringify(s));
+      state=load();save();renderAll();
+      toast('farm restored 💛 welcome home');
+    }catch(err){toast('hmm, that file doesn\'t look like a deep end backup');}
+  };
+  r.readAsText(f);e.target.value='';
+});
+
+$('#pplSearch').addEventListener('input',renderPeople);
+$('#pplFilter').addEventListener('change',renderPeople);
 
 function fallbackCopy(t,cb){
   const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);

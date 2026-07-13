@@ -176,6 +176,11 @@
   .seed-row .lbl{font-size:14px}
   details summary{cursor:pointer}
   details summary:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  .pb-row{border-bottom:1px dashed var(--line);padding:2px 0 10px}
+  .pb-row:last-of-type{border-bottom:0;padding-bottom:0}
+  .pb-row summary{padding:11px 0 4px;font-weight:700;font-size:15.5px}
+  .pb-row summary .pb-num{margin-right:6px}
+  .pb-row.isdone summary{color:var(--muted)}
   textarea{min-height:88px}
   .prompt-card .saved{color:var(--good);font-size:13px;font-weight:700;margin-left:10px}
   .pb-num{color:var(--faint)}
@@ -329,6 +334,10 @@
       <button class="btn btn-grad" id="addPersonBtn2">＋ add someone u met</button>
     </div>
     <div id="peopleList"></div>
+    <div style="text-align:center;margin-top:8px">
+      <p class="sub" style="margin-bottom:6px">ur farm lives in this browser. grab a backup anytime.</p>
+      <button class="btn small" id="exportBtn">💾 download my data</button>
+    </div>
   </section>
 
   <!-- ============ PLAYBOOK ============ -->
@@ -336,16 +345,16 @@
     <div class="card rule">
       <span class="eyebrow mono">the philosophy</span>
       <h2 class="display">8 rules of the game</h2>
-      <p class="sub">the worldview behind everything we do. read one, do the action right here right now, check it off. <span id="pbCount"></span></p>
+      <p class="sub">tap a rule. do the action. check it off. one at a time. <span id="pbCount"></span></p>
+      <div id="playbookList"></div>
     </div>
-    <div id="playbookList"></div>
 
-    <div class="card rule" style="margin-top:28px">
+    <div class="card rule">
       <span class="eyebrow mono">when u need money to move</span>
       <h2 class="display">cash injection campaigns</h2>
-      <p class="sub">for when u want cashflow this month, not someday. borrowed from the best playbooks in the game (thank u, hormozi), filtered through love. real deadlines and real caps only, because fake scarcity is gross. run one, log it, watch the farm light up. <span id="campCount"></span></p>
+      <p class="sub">for when u want cashflow this month, not someday. real plays with real scripts. honest deadlines and honest caps only. <span id="campCount"></span></p>
+      <div id="campaignList"></div>
     </div>
-    <div id="campaignList"></div>
   </section>
 
   <!-- ============ WINS ============ -->
@@ -365,10 +374,6 @@
     <div class="card">
       <h3>recent activity</h3>
       <div class="feed" id="feed"></div>
-    </div>
-    <div style="text-align:center">
-      <p class="sub" style="margin-bottom:6px">ur progress lives in this browser. grab a backup anytime.</p>
-      <button class="btn small" id="exportBtn">💾 download my data</button>
     </div>
   </section>
 
@@ -878,16 +883,15 @@ function renderPlaybook(){
   $('#pbCount').innerHTML=`<b>${state.playbook.length}/8 practiced.</b>`;
   $('#playbookList').innerHTML=PLAYBOOK.map((p,i)=>{
     const done=state.playbook.includes(p.id);
-    return `<div class="card">
-      <span class="eyebrow mono"><span class="pb-num">0${i+1} ·</span> rule of the game</span>
-      <h3 style="font-size:20px">${p.t}</h3>
+    return `<details class="pb-row${done?' isdone':''}">
+      <summary><span class="mono pb-num">0${i+1}</span> ${p.t} ${done?'<span class="done-tick">✓</span>':''}</summary>
       <p style="font-size:15px;margin:8px 0 0">${p.body}</p>
       <div class="pb-action"><b>try this →</b> ${p.act}</div>
       <div class="pb-done">
         <button class="btn ${done?'':'btn-grad'} small" data-pb="${p.id}" ${done?'disabled':''}>
           ${done?'practiced ✓':'i did the action · +20 xp'}</button>
       </div>
-    </div>`;
+    </details>`;
   }).join('');
   document.querySelectorAll('[data-pb]').forEach(b=>b.addEventListener('click',()=>{
     if(!state.playbook.includes(b.dataset.pb)){
@@ -900,21 +904,17 @@ function renderPlaybook(){
   $('#campCount').innerHTML=`<b>${state.campaigns.length}/6 run.</b>`;
   $('#campaignList').innerHTML=CAMPAIGNS.map((c,i)=>{
     const done=state.campaigns.includes(c.id);
-    return `<div class="card">
-      <span class="eyebrow mono"><span class="pb-num">0${i+1} ·</span> campaign</span>
-      <h3 style="font-size:20px">${c.t}</h3>
-      <p class="sub" style="margin:6px 0 0"><b>run this when:</b> ${c.when}</p>
+    return `<details class="pb-row${done?' isdone':''}">
+      <summary><span class="mono pb-num">0${i+1}</span> ${c.t} ${done?'<span class="done-tick">✓</span>':''}</summary>
+      <p class="sub" style="margin:8px 0 0"><b>run this when:</b> ${c.when}</p>
       <p style="font-size:15px;margin:10px 0 0">${c.why}</p>
-      <details style="margin-top:12px">
-        <summary class="mono" style="color:var(--cyan)">the play, step by step</summary>
-        <ol style="font-size:14.5px;margin:10px 0 0;padding-left:20px">${c.steps.map(s=>`<li style="margin-bottom:8px">${s}</li>`).join('')}</ol>
-        <div class="pb-action"><b>steal these words →</b> ${c.script}</div>
-      </details>
+      <ol style="font-size:14.5px;margin:10px 0 0;padding-left:20px">${c.steps.map(s=>`<li style="margin-bottom:8px">${s}</li>`).join('')}</ol>
+      <div class="pb-action"><b>steal these words →</b> ${c.script}</div>
       <div class="pb-done">
         <button class="btn ${done?'':'btn-grad'} small" data-camp="${c.id}" ${done?'disabled':''}>
           ${done?'campaign run ✓':'i ran this campaign · +100 xp'}</button>
       </div>
-    </div>`;
+    </details>`;
   }).join('');
   document.querySelectorAll('[data-camp]').forEach(b=>b.addEventListener('click',()=>{
     if(!state.campaigns.includes(b.dataset.camp)){

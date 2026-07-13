@@ -339,6 +339,13 @@
       <p class="sub">the worldview behind everything we do. read one, do the action right here right now, check it off. <span id="pbCount"></span></p>
     </div>
     <div id="playbookList"></div>
+
+    <div class="card rule" style="margin-top:28px">
+      <span class="eyebrow mono">when u need money to move</span>
+      <h2 class="display">cash injection campaigns</h2>
+      <p class="sub">for when u want cashflow this month, not someday. borrowed from the best playbooks in the game (thank u, hormozi), filtered through love. real deadlines and real caps only, because fake scarcity is gross. run one, log it, watch the farm light up. <span id="campCount"></span></p>
+    </div>
+    <div id="campaignList"></div>
   </section>
 
   <!-- ============ WINS ============ -->
@@ -470,6 +477,33 @@ const PLAYBOOK=[
    act:'do something unexpected and generous for one client or friend in ur world today.'}
 ];
 
+const CAMPAIGNS=[
+  {id:'warm100', t:'the warm 100 sweep', when:'ur farm feels empty or ur month feels quiet.',
+   why:'hormozi\'s warm outreach math is simple: 100 warm reach-outs reliably creates clients. our math says why: it floods ur farm with real conversations, and ~10 real convos grow into 1 client.',
+   steps:['brain dump 100 people u know. everyone. old coworkers, nursing school friends, ur cousin\'s wife. nobody is too random.','reach out to 10 a day for 10 days. the A-C-A way: Acknowledge something real in their life, Compliment them genuinely, Ask a question about them.','no pitching. ever. when it\'s natural, drop the referral ask: "who do u know that\'s trying to ___? i\'m helping people with exactly that right now."'],
+   script:'"yo! i just saw u [real thing they posted or did]. so proud of u, that\'s huge. how\'s [their thing] going?" …then later, if it\'s natural: "btw, i\'m helping [who u serve] with [tangible transformation] right now. who do u know that\'s ready for that?"'},
+  {id:'founding5', t:'the founding 5 beta', when:'u have an offer idea but no (or few) paying clients yet.',
+   why:'skin in the game creates transformation, and their results become ur marketing. free clients ghost. founding members show up.',
+   steps:['name the tangible transformation. "save ur marriage" energy, not "reduce stress" energy.','personally invite ur 5 most alive connections at founding member pricing, about a third of ur future price. real cap: 5 spots, then it closes. that\'s honest scarcity.','trade the discount for skin in the game: a testimonial, honest feedback, and 2 introductions when they win.','deliver like crazy. overdeliver until they can\'t stop talking about it.'],
+   script:'"i\'m opening 5 founding spots for [offer]. u came to mind immediately because [real, specific reason]. it\'s [price] instead of [future price] because u\'re helping me build this thing. want in?"'},
+  {id:'revival9', t:'the 9-word revival', when:'u have old conversations that went quiet. (check ur water queue.)',
+   why:'the shortest campaign alive, and half the industry swears by it because it works. it reopens loops people never meant to close. short reads as confident. paragraphs read as desperate.',
+   steps:['list every person who ever showed interest and went quiet. every dm, every "let me think about it," every ghost.','send exactly one line: "are u still wanting to [their dream outcome]?"','nothing else. no pitch, no paragraph, no "just checking in!"','when they reply (and a bunch will), just be human and pick up right where u left off.'],
+   script:'"are u still wanting to [leave bedside / start ur coaching thing / feel like urself again]?"'},
+  {id:'grandslam', t:'the grand slam offer rebuild', when:'people like u but nobody\'s buying.',
+   why:'an offer so good they\'d feel silly saying no beats a hundred clever posts. value = dream outcome × belief it\'ll work, divided by time and effort. crank the first two, shrink the last two.',
+   steps:['dream outcome: name the tangible after, in their words, not coach language.','likelihood: stack every piece of proof u have. testimonials, ur own story, their own past wins.','speed: what do they get in the FIRST 7 days? name it in the offer.','effort: make it done-with-u, not do-it-urself. calls, check-ins, voice note access.','add an honest guarantee: "if u do the work and don\'t get [outcome], i keep coaching u free until u do." u carry the risk. that\'s what belief looks like.'],
+   script:'"[offer name]: [dream outcome] in [timeframe], done with me, not alone. first week u get [immediate win]. and if u do the work and don\'t get there, i work with u free until u do."'},
+  {id:'popup', t:'the paid pop-up workshop', when:'u want cash this month and ur audience needs a win.',
+   why:'small yeses create big yeses. a $47 win builds the trust a $4,000 yes needs, and low barrier to entry with real skin in the game beats another free thing that sits in inboxes.',
+   steps:['pick ONE painful, specific problem u can genuinely solve in 90 minutes live.','price it $47-97. low enough to be a no-brainer, real enough that they show up.','personally invite everyone in ur farm, then post it plain. no canva gymnastics.','deliver a real win live. they should leave with something done, not something to think about.','end with ONE honest invitation to go deeper with u. then stop talking.'],
+   script:'"i\'m running a 90-minute live workshop: [specific outcome, done together, live]. it\'s $67. u\'ll leave with [tangible thing] finished. [date]. want the link?"'},
+  {id:'givegit', t:'the give-get referral blitz', when:'u have happy clients or friends who love u.',
+   why:'referrals don\'t come from asking. they come from wow plus an easy way to share it. gifting makes the share generous instead of salesy, and the three-way chat removes all the friction.',
+   steps:['give every current and past client 2 gift sessions to hand to someone they love.','make the intro frictionless: "just throw us in a three-way chat."','thank every referrer with something real: a kickback, a gift, a bonus session.','serve the gifted session so powerfully they never forget it. then, when it\'s true, invite.'],
+   script:'"u know how much i loved working with u. i\'m giving u 2 gift sessions to hand to anyone u love who\'s [going through the thing]. just throw us in a group chat and i\'ll take it from there."'}
+];
+
 const LEVELS=[
   {name:'Seed',min:0},{name:'Spark',min:100},{name:'Connector',min:250},
   {name:'Needle Mover',min:500},{name:'Magnet',min:850},{name:'Catalyst',min:1300}
@@ -487,6 +521,8 @@ const BADGES=[
   {id:'week',    ico:'⚡', t:'4 weeks strong',    d:'a month of showing up', chk:s=>s.streak.n>=4},
   {id:'word',    ico:'🤝', t:'word keeper',       d:'kept 3 it\'s-decided commitments', chk:s=>cnt(s,'kept')>=3},
   {id:'student', ico:'📖', t:'student of the game',d:'all 8 rules practiced', chk:s=>PLAYBOOK.every(p=>s.playbook.includes(p.id))},
+  {id:'cash',    ico:'💰', t:'cash catalyst',      d:'ran ur first cash injection campaign', chk:s=>(s.campaigns||[]).length>=1},
+  {id:'rain',    ico:'⛈️', t:'rainmaker',          d:'3 campaigns run', chk:s=>(s.campaigns||[]).length>=3},
   {id:'deep',    ico:'🔮', t:'catalyst energy',   d:'reached the CATALYST level', chk:s=>s.xp>=1300}
 ];
 
@@ -497,11 +533,11 @@ function daysSince(t){return Math.floor((Date.now()-t)/864e5);}
 function load(){
   try{const s=JSON.parse(localStorage.getItem(STORE));if(s&&typeof s.xp==='number'){
     if(!s.streak||s.streak.lastWeek===undefined){const old=s.streak||{};s.streak={n:old.n?1:0,lastWeek:old.last?weekKeyOf(new Date(old.last)):null};}
-    s.one=s.one||null;s.commit=s.commit||null;s.wbDismissed=s.wbDismissed||null;
+    s.one=s.one||null;s.commit=s.commit||null;s.wbDismissed=s.wbDismissed||null;s.campaigns=s.campaigns||[];
     (s.people||[]).forEach(p=>{if(!p.touched)p.touched=(p.notes&&p.notes[0]&&p.notes[0].t)||p.id;});
     return s;
   }}catch(e){}
-  return {xp:0,streak:{n:0,lastWeek:null},people:[],playbook:[],badges:[],log:[],braveDone:{},one:null,commit:null,wbDismissed:null};
+  return {xp:0,streak:{n:0,lastWeek:null},people:[],playbook:[],badges:[],log:[],braveDone:{},one:null,commit:null,wbDismissed:null,campaigns:[]};
 }
 function save(){localStorage.setItem(STORE,JSON.stringify(state));}
 const todayKey=()=>new Date().toISOString().slice(0,10);
@@ -736,8 +772,8 @@ function renderForecast(){
     const rec=state.log.filter(e=>e.t>=since);
     const cw=rec.filter(e=>e.type==='convo').length/4;
     const iw=rec.filter(e=>e.type==='invited').length/4;
-    const remaining=Math.max(1,3-cnt(state,'invited'));
-    const rate=Math.max(iw,cw/3);
+    const remaining=Math.max(1,4-cnt(state,'invited'));
+    const rate=Math.max(iw,cw*0.4);
     if(rate<=0){
       text='the math is quiet this month. one real conversation this week restarts it.';
     } else {
@@ -748,7 +784,7 @@ function renderForecast(){
   el.innerHTML=`<div class="card">
     <span class="eyebrow mono cyan">the math</span>
     <p style="font-size:15px;margin:4px 0 0">${text}</p>
-    <p class="sub" style="margin-top:8px">rough math: ~3 real conversations grow into an invitation, ~3 invitations grow into a client. the numbers are just pace, and pace is up to u.</p>
+    <p class="sub" style="margin-top:8px">the real math, from what we see with actual coaching clients: ~10 real conversations grow into ~4 invitations grow into 1 client. the numbers are just pace, and pace is up to u.</p>
   </div>`;
 }
 $('#braveShuffle').addEventListener('click',()=>{braveShift++;renderToday();});
@@ -857,6 +893,33 @@ function renderPlaybook(){
     if(!state.playbook.includes(b.dataset.pb)){
       state.playbook.push(b.dataset.pb);
       award(20,'playbook','rule practiced. let\'s go');
+    }
+  }));
+
+  // cash injection campaigns
+  $('#campCount').innerHTML=`<b>${state.campaigns.length}/6 run.</b>`;
+  $('#campaignList').innerHTML=CAMPAIGNS.map((c,i)=>{
+    const done=state.campaigns.includes(c.id);
+    return `<div class="card">
+      <span class="eyebrow mono"><span class="pb-num">0${i+1} ·</span> campaign</span>
+      <h3 style="font-size:20px">${c.t}</h3>
+      <p class="sub" style="margin:6px 0 0"><b>run this when:</b> ${c.when}</p>
+      <p style="font-size:15px;margin:10px 0 0">${c.why}</p>
+      <details style="margin-top:12px">
+        <summary class="mono" style="color:var(--cyan)">the play, step by step</summary>
+        <ol style="font-size:14.5px;margin:10px 0 0;padding-left:20px">${c.steps.map(s=>`<li style="margin-bottom:8px">${s}</li>`).join('')}</ol>
+        <div class="pb-action"><b>steal these words →</b> ${c.script}</div>
+      </details>
+      <div class="pb-done">
+        <button class="btn ${done?'':'btn-grad'} small" data-camp="${c.id}" ${done?'disabled':''}>
+          ${done?'campaign run ✓':'i ran this campaign · +100 xp'}</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('[data-camp]').forEach(b=>b.addEventListener('click',()=>{
+    if(!state.campaigns.includes(b.dataset.camp)){
+      state.campaigns.push(b.dataset.camp);
+      award(100,'campaign','cash injection campaign run 💰',true);
     }
   }));
 }

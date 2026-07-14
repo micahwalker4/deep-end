@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Deep End · coach view</title>
+<style>
+  :root{
+    --bg:#FBFAF7; --card:#FFFFFF; --card2:#F5F3ED; --line:#E7E3D8;
+    --ink:#141B2E; --muted:#5E6680; --faint:#9AA1B5;
+    --cyan:#0FA8C4; --cyan-soft:#E4F6FA;
+    --yellow:#FFD60A; --yellow-soft:#FFF6C9;
+    --orange:#FF6B35; --pink:#E14FD0;
+    --good:#1FA971; --good-soft:#E3F5EC;
+    --grad:linear-gradient(90deg,#FF6B35,#E14FD0,#22C4E6);
+    --shadow:0 1px 2px rgba(20,27,46,.05),0 8px 24px rgba(20,27,46,.06);
+    --r:16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0D1420; --card:#141D2C; --card2:#0F1826; --line:#243044;
+      --ink:#EDF1F7; --muted:#9BA6BC; --faint:#5E6a82;
+      --cyan:#2BD1EC; --cyan-soft:#0E2733;
+      --yellow:#FFE14D; --yellow-soft:#2E2A10;
+      --good:#3ECF95; --good-soft:#0F2C22;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .display{font-family:"Avenir Next Condensed","Futura","Arial Narrow",-apple-system,sans-serif;
+    font-weight:800;text-transform:uppercase;letter-spacing:.01em;line-height:1}
+  .mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px 80px}
+  header{padding:40px 0 10px;text-align:center}
+  h1{font-size:clamp(40px,8vw,64px);margin:10px 0 4px;
+    background:linear-gradient(100deg,var(--cyan) 20%,#7B5CFF 85%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:22px;box-shadow:var(--shadow);position:relative;margin-bottom:16px}
+  .card.rule::before{content:"";position:absolute;top:0;left:22px;width:56px;height:3px;
+    border-radius:0 0 3px 3px;background:var(--grad)}
+  .eyebrow{color:var(--orange);display:block;margin-bottom:6px}
+  input{width:100%;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);
+    color:var(--ink);font:inherit;font-size:15px;padding:12px 14px}
+  input:focus{outline:2px solid var(--cyan);outline-offset:1px;border-color:var(--cyan)}
+  label{font-size:13px;font-weight:700;display:block;margin:14px 0 6px;color:var(--muted)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;
+    border-radius:12px;padding:12px 20px;cursor:pointer;font:inherit;font-weight:800;
+    font-size:15px;color:var(--ink);background:var(--card2)}
+  .btn-grad{background:var(--grad);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .btn.small{padding:8px 14px;font-size:13px;border-radius:10px}
+  .btn:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  .summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+  .sumbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;
+    text-align:center;box-shadow:var(--shadow)}
+  .sumbox .n{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;display:block}
+  .sumbox .mono{color:var(--muted);font-size:9.5px}
+  .client-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .client-top h3{margin:0;font-size:19px}
+  .flags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .flag{border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:700;background:var(--card2)}
+  .flag.love{background:var(--yellow-soft)}
+  .flag.good{background:var(--good-soft);color:var(--good)}
+  .flag.cold{background:var(--cyan-soft);color:var(--cyan)}
+  .weekrow{display:flex;gap:16px;margin-top:10px;font-size:13.5px;color:var(--muted);flex-wrap:wrap}
+  .weekrow b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .err{color:var(--orange);font-size:14px;margin-top:10px}
+  .quiet{color:var(--faint);font-size:13px}
+  .lvlpill{background:var(--card2);border-radius:8px;padding:2px 10px;font-size:12px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mono" style="color:var(--orange)">🔥 the catalyst game · coach view</span>
+    <h1 class="display">The Crew</h1>
+    <p class="sub">who's playing, who's winning, who needs love.</p>
+  </header>
+
+  <div class="card rule" id="loginCard">
+    <span class="eyebrow mono">coach sign in</span>
+    <label for="cEmail">email</label>
+    <input type="text" id="cEmail" autocomplete="email" inputmode="email">
+    <label for="cPw">password</label>
+    <input type="password" id="cPw" autocomplete="current-password">
+    <div class="err" id="cErr" hidden></div>
+    <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-grad" id="cGo">let me in</button>
+      <span class="sub">first time? create ur coach account with the same email that's on the coaches list.</span>
+    </div>
+    <p class="sub" style="margin-top:10px"><button class="btn small" id="cSignup">create coach account</button></p>
+  </div>
+
+  <div id="dash" hidden>
+    <div class="summary" id="summary"></div>
+    <div id="clients"></div>
+    <div style="text-align:center;margin-top:12px;display:flex;gap:10px;justify-content:center">
+      <button class="btn small" id="refreshBtn">↻ refresh</button>
+      <button class="btn small" id="outBtn">sign out</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+"use strict";
+const CFG=window.DEEP_END_CONFIG||{};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LEVELS=[
+  {name:'Seed',min:0},{name:'Spark',min:100},{name:'Connector',min:250},
+  {name:'Needle Mover',min:500},{name:'Magnet',min:850},{name:'Catalyst',min:1300}
+];
+const levelOf=x=>{let l=LEVELS[0];for(const L of LEVELS)if(x>=L.min)l=L;return l;};
+const daysSince=t=>Math.floor((Date.now()-t)/864e5);
+
+if(!CFG.SUPABASE_URL||!CFG.SUPABASE_ANON_KEY||!window.supabase){
+  $('#loginCard').innerHTML='<p>sync isn\'t configured yet. add the supabase keys to config.js and redeploy.</p>';
+  return;
+}
+const sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY);
+
+function err(m){const e=$('#cErr');e.textContent=m;e.hidden=false;}
+
+async function isCoach(email){
+  const {data}=await sb.from('coaches').select('email').eq('email',email).maybeSingle();
+  return !!data;
+}
+
+async function loadDash(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){$('#loginCard').hidden=false;$('#dash').hidden=true;return;}
+  const email=session.user.email;
+  if(!(await isCoach(email))){
+    err('this page is for the coach. u\'re signed in as '+email+', which isn\'t on the coaches list.');
+    await sb.auth.signOut();
+    return;
+  }
+  $('#loginCard').hidden=true;$('#dash').hidden=false;
+  const {data:rows,error}=await sb.from('player_state').select('name,email,data,updated_at');
+  if(error){$('#clients').innerHTML='<div class="card">could not load the crew: '+esc(error.message)+'</div>';return;}
+  render(rows||[]);
+}
+
+function weekStart(){
+  const d=new Date();const dow=(d.getDay()+6)%7;
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate()-dow).getTime();
+}
+
+function render(rows){
+  const mon=weekStart();
+  const crew=rows.map(r=>{
+    const s=r.data||{};
+    const log=s.log||[];
+    const people=s.people||[];
+    const wk=t=>log.filter(e=>e.t>=mon&&e.type===t).length;
+    const lastT=log.length?log[0].t:null;
+    return {
+      name:r.name||(r.email||'').split('@')[0],
+      email:r.email||'',
+      xp:s.xp||0,
+      level:levelOf(s.xp||0).name,
+      streak:(s.streak&&s.streak.n)||0,
+      lives:people.filter(p=>p.stage>=2).length,
+      harvests:people.filter(p=>p.stage>=5).length,
+      farm:people.length,
+      convos:wk('convo'),serves:wk('served'),invites:wk('invited'),
+      lastT, quiet:lastT?daysSince(lastT):null,
+      commitOpen:!!(s.commit&&!s.commit.done),
+      updated:r.updated_at
+    };
+  });
+  // who needs love first: never-played, then quietest
+  crew.sort((a,b)=>{
+    const qa=a.quiet===null?999:a.quiet, qb=b.quiet===null?999:b.quiet;
+    return qb-qa;
+  });
+  const activeWk=crew.filter(c=>c.lastT&&c.lastT>=mon).length;
+  const sums=[
+    {n:crew.length,l:'players'},
+    {n:activeWk,l:'active this week'},
+    {n:crew.reduce((a,c)=>a+c.lives,0),l:'lives touched'},
+    {n:crew.reduce((a,c)=>a+c.harvests,0),l:'harvests 🍞'},
+    {n:crew.reduce((a,c)=>a+c.invites,0),l:'invites this week'}
+  ];
+  $('#summary').innerHTML=sums.map(s=>`<div class="sumbox"><span class="n">${s.n}</span><span class="mono">${s.l}</span></div>`).join('');
+  $('#clients').innerHTML=crew.length?crew.map(c=>{
+    const flags=[];
+    if(c.quiet===null)flags.push('<span class="flag love">🌱 hasn\'t started · send a hello</span>');
+    else if(c.quiet>=7)flags.push(`<span class="flag love">🥀 quiet ${c.quiet} days · needs love</span>`);
+    else flags.push('<span class="flag good">🔥 in motion</span>');
+    if(c.commitOpen)flags.push('<span class="flag cold">📝 invitation locked in · check on them</span>');
+    if(c.harvests)flags.push(`<span class="flag good">🍞 ${c.harvests} harvest${c.harvests>1?'s':''}</span>`);
+    return `<div class="card">
+      <div class="client-top">
+        <h3>${esc(c.name)} <span class="lvlpill">${c.level}</span></h3>
+        <span class="quiet">${esc(c.email)}</span>
+      </div>
+      <div class="flags">${flags.join('')}</div>
+      <div class="weekrow">
+        <span>this week: <b>${c.convos}</b> convos · <b>${c.serves}</b> serves · <b>${c.invites}</b> invites</span>
+        <span>💛 <b>${c.lives}</b> lives</span>
+        <span>🌱 farm: <b>${c.farm}</b></span>
+        <span>⚡ <b>${c.xp}</b> xp</span>
+        <span>🔥 <b>${c.streak}</b> wk streak</span>
+      </div>
+    </div>`;
+  }).join(''):'<div class="card">no players yet. once clients sign in to sync inside the app, they show up here.</div>';
+}
+
+$('#cGo').addEventListener('click',async()=>{
+  const {error}=await sb.auth.signInWithPassword({email:$('#cEmail').value.trim(),password:$('#cPw').value});
+  if(error){err(error.message.toLowerCase());return;}
+  loadDash();
+});
+$('#cSignup').addEventListener('click',async()=>{
+  const {data,error}=await sb.auth.signUp({email:$('#cEmail').value.trim(),password:$('#cPw').value,options:{data:{name:'Micah'}}});
+  if(error){err(error.message.toLowerCase());return;}
+  if(!data.session){err('check ur email to confirm, then sign in.');return;}
+  loadDash();
+});
+$('#cPw').addEventListener('keydown',e=>{if(e.key==='Enter')$('#cGo').click();});
+$('#refreshBtn').addEventListener('click',loadDash);
+$('#outBtn').addEventListener('click',async()=>{await sb.auth.signOut();loadDash();});
+loadDash();
+})();
+</script>
+</body>
+</html>

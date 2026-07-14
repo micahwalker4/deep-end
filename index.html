@@ -270,6 +270,7 @@
       <div class="stat-chip"><span id="lvlName" class="display" style="font-size:15px">Seed</span>
         <span class="lvlbar"><i id="lvlBar" style="width:0%"></i></span>
         <span class="mono" id="xpLbl">0 xp</span></div>
+      <button class="stat-chip" id="syncChip" hidden style="cursor:pointer;font:inherit"></button>
     </div>
   </header>
 
@@ -411,6 +412,25 @@
   </div>
 </div>
 
+<div class="overlay" id="ovAuth" role="dialog" aria-modal="true" aria-label="Sync sign in">
+  <div class="modal">
+    <span class="eyebrow mono">☁️ sync</span>
+    <h3 class="display" id="authTitle">ur progress, everywhere</h3>
+    <p class="sub">sign in and ur farm follows u to every device, backed up automatically.</p>
+    <div class="field" id="authNameField" hidden><label for="authName">ur first name</label><input type="text" id="authName" autocomplete="name" placeholder="what the crew calls u"></div>
+    <div class="field"><label for="authEmail">email</label><input type="text" id="authEmail" autocomplete="email" inputmode="email" placeholder="u@example.com"></div>
+    <div class="field"><label for="authPw">password</label><input type="password" id="authPw" autocomplete="current-password" placeholder="6+ characters"></div>
+    <p id="authErr" class="sub" style="color:var(--orange);margin:0" hidden></p>
+    <div class="modal-btns">
+      <button class="btn" data-close>later</button>
+      <button class="btn btn-grad" id="authSubmit">sign in</button>
+    </div>
+    <p class="sub" style="text-align:center;margin:14px 0 0">
+      <button class="linkish" id="authSwitch">new here? create ur account</button>
+    </p>
+  </div>
+</div>
+
 <div class="overlay" id="ovBulk" role="dialog" aria-modal="true" aria-label="Brain dump a list">
   <div class="modal">
     <span class="eyebrow mono">🌱 brain dump</span>
@@ -453,6 +473,8 @@ kelly (knows everyone)"></textarea></div>
 
 <div id="toast"></div>
 
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
 "use strict";
@@ -576,7 +598,7 @@ function load(){
   }}catch(e){}
   return {xp:0,streak:{n:0,lastWeek:null},people:[],playbook:[],badges:[],log:[],braveDone:{},one:null,commit:null,wbDismissed:null,campaigns:[],installDismissed:false};
 }
-function save(){localStorage.setItem(STORE,JSON.stringify(state));}
+function save(){state._rev=Date.now();localStorage.setItem(STORE,JSON.stringify(state));schedulePush();}
 const todayKey=()=>new Date().toISOString().slice(0,10);
 function cnt(s,type){return s.log.filter(e=>e.type===type).length;}
 
@@ -1165,6 +1187,125 @@ $('#shareBtn').addEventListener('click',()=>{
 });
 
 function renderAll(){renderHeader();renderToday();renderPeople();renderPlaybook();renderWins();}
+/* ---------------- cloud sync (v2) ---------------- */
+const CFG=window.DEEP_END_CONFIG||{};
+let sb=null,syncUser=null,pushTimer=null,authMode='signin';
+
+function syncEnabled(){return !!(CFG.SUPABASE_URL&&CFG.SUPABASE_ANON_KEY&&window.supabase);}
+
+function schedulePush(){
+  if(!sb||!syncUser)return;
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(pushState,1500);
+}
+
+async function pushState(){
+  if(!sb||!syncUser)return;
+  try{
+    await sb.from('player_state').upsert({
+      user_id:syncUser.id,
+      email:syncUser.email,
+      name:(syncUser.user_metadata&&syncUser.user_metadata.name)||'',
+      data:state,
+      updated_at:new Date().toISOString()
+    });
+  }catch(e){}
+}
+
+async function pullState(){
+  if(!sb||!syncUser)return;
+  try{
+    const {data:row,error}=await sb.from('player_state').select('data').eq('user_id',syncUser.id).maybeSingle();
+    if(error)return;
+    const remoteRev=(row&&row.data&&row.data._rev)||0;
+    const localRev=state._rev||0;
+    if(row&&remoteRev>localRev){
+      localStorage.setItem(STORE,JSON.stringify(row.data));
+      state=load();
+      renderAll();
+      toast('☁️ synced from ur other device');
+    }else{
+      pushState();
+    }
+  }catch(e){}
+}
+
+function renderSyncChip(){
+  const chip=$('#syncChip');
+  if(!syncEnabled()){chip.hidden=true;return;}
+  chip.hidden=false;
+  if(syncUser){
+    const nm=(syncUser.user_metadata&&syncUser.user_metadata.name)||syncUser.email.split('@')[0];
+    chip.innerHTML='☁️ <span class="mono">synced · '+esc(nm)+'</span>';
+  }else{
+    chip.innerHTML='☁️ <span class="mono">sync my progress</span>';
+  }
+}
+
+function setAuthMode(m){
+  authMode=m;
+  $('#authNameField').hidden=(m!=='signup');
+  $('#authSubmit').textContent=(m==='signup')?'create my account':'sign in';
+  $('#authSwitch').textContent=(m==='signup')?'already have an account? sign in':'new here? create ur account';
+  $('#authErr').hidden=true;
+  $('#authPw').autocomplete=(m==='signup')?'new-password':'current-password';
+}
+
+function authError(msg){const e=$('#authErr');e.textContent=msg;e.hidden=false;}
+
+async function authSubmit(){
+  const email=$('#authEmail').value.trim();
+  const pw=$('#authPw').value;
+  if(!email||email.indexOf('@')<1){authError('that email doesn\'t look right');return;}
+  if(!pw||pw.length<6){authError('password needs 6+ characters');return;}
+  $('#authSubmit').disabled=true;
+  try{
+    if(authMode==='signup'){
+      const name=$('#authName').value.trim();
+      if(!name){authError('tell us ur name so the crew knows u');$('#authSubmit').disabled=false;return;}
+      const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{name}}});
+      if(error){authError(error.message.toLowerCase());$('#authSubmit').disabled=false;return;}
+      if(!data.session){
+        authError('almost there: check ur email to confirm, then come back and sign in.');
+        $('#authSubmit').disabled=false;return;
+      }
+    }else{
+      const {error}=await sb.auth.signInWithPassword({email,password:pw});
+      if(error){authError(error.message.toLowerCase());$('#authSubmit').disabled=false;return;}
+    }
+    closeOv();
+    toast('☁️ synced. ur progress follows u now');
+  }catch(e){authError('something hiccuped. try again?');}
+  $('#authSubmit').disabled=false;
+}
+
+async function syncInit(){
+  if(!syncEnabled()){renderSyncChip();return;}
+  sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY);
+  $('#syncChip').addEventListener('click',()=>{
+    if(syncUser){
+      if(confirm('sign out of sync? ur progress stays on this device.')){sb.auth.signOut();}
+    }else{
+      setAuthMode('signin');
+      $('#authEmail').value='';$('#authPw').value='';$('#authName').value='';
+      openOv('#ovAuth');setTimeout(()=>$('#authEmail').focus(),50);
+    }
+  });
+  $('#authSubmit').addEventListener('click',authSubmit);
+  $('#authSwitch').addEventListener('click',()=>setAuthMode(authMode==='signup'?'signin':'signup'));
+  $('#authPw').addEventListener('keydown',e=>{if(e.key==='Enter')authSubmit();});
+  sb.auth.onAuthStateChange((ev,session)=>{
+    syncUser=(session&&session.user)||null;
+    renderSyncChip();
+    if(ev==='SIGNED_IN')pullState();
+  });
+  const {data:{session}}=await sb.auth.getSession();
+  syncUser=(session&&session.user)||null;
+  renderSyncChip();
+  if(syncUser)pullState();
+}
+
 renderAll();
+try{syncInit();}catch(e){}
 })();
 </script>
